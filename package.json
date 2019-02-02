@@ -51,6 +51,7 @@
     "tslint-config-prettier": "^1.13.0",
     "tslint-immutable": "^5.1.0",
     "ts-node": "^7.0.0",
+    "typedoc": "^0.14.2",
     "typescript": "~3.2"
   }
 }

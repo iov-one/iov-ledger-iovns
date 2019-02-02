@@ -152,7 +152,14 @@ And make sure the versions match.
 
 ## API Documentation
 
-[https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/](https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/)
+Docs are not published at the moment. To generate them locally run
+
+```
+$ yarn install
+$ yarn docs
+```
+
+and check the `./docs` folder.
 
 ## License
 

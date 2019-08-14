@@ -1,8 +1,8 @@
-import { ChainId, PrehashType, Identity, SignableBytes, SignatureBytes } from "@iov/bcp";
+import { ChainId, Identity, PrehashType, SignableBytes, SignatureBytes } from "@iov/bcp";
+import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 import { Wallet, WalletId, WalletImplementationIdString, WalletSerializationString } from "@iov/keycontrol";
 import { ValueAndUpdates } from "@iov/stream";
 import { LedgerState } from "./statetracker";
-import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 export declare class LedgerSimpleAddressWallet implements Wallet {
     static readonly implementationId: WalletImplementationIdString;
     /**
@@ -49,7 +49,7 @@ export declare class LedgerSimpleAddressWallet implements Wallet {
     printableSecret(): string;
     serialize(): WalletSerializationString;
     clone(): Wallet;
+    previewIdentity(_chainId: ChainId, _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number): Promise<Identity>;
     private simpleAddressIndex;
     private buildIdentity;
-    previewIdentity(_chainId: ChainId, _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number): Promise<Identity>;
 }

@@ -2,10 +2,10 @@
 import { LedgerState, StateTracker } from "../statetracker";
 
 function timestampedLog(data: any): void {
-  console.log(`[${new Date(Date.now()).toISOString()}] ${data}`);
+  console.info(`[${new Date(Date.now()).toISOString()}] ${data}`);
 }
 
-console.log("Press ^C to exit");
+console.info("Press ^C to exit");
 
 const tracker = new StateTracker();
 tracker.state.updates.subscribe({

@@ -1,16 +1,14 @@
 // tslint:disable:readonly-array
-import PseudoRandom from "random-js";
-import { As } from "type-tagger";
-
 import {
   Algorithm,
   ChainId,
-  PrehashType,
   Identity,
+  PrehashType,
   PubkeyBytes,
   SignableBytes,
   SignatureBytes,
 } from "@iov/bcp";
+import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
 import {
   Keyring,
@@ -20,11 +18,12 @@ import {
   WalletSerializationString,
 } from "@iov/keycontrol";
 import { DefaultValueProducer, ValueAndUpdates } from "@iov/stream";
+import PseudoRandom from "random-js";
+import { As } from "type-tagger";
 
 import { getPublicKeyWithIndex, signTransactionWithIndex } from "./app";
 import { connectToFirstLedger } from "./exchange";
 import { LedgerState, StateTracker } from "./statetracker";
-import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 
 interface PubkeySerialization {
   readonly algo: string;
@@ -313,6 +312,13 @@ export class LedgerSimpleAddressWallet implements Wallet {
     return new LedgerSimpleAddressWallet(this.serialize());
   }
 
+  public async previewIdentity(
+    _chainId: ChainId,
+    _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
+  ): Promise<Identity> {
+    throw new Error("Not yet implemented");
+  }
+
   // This throws an exception when address index is missing
   private simpleAddressIndex(identity: Identity): number {
     const identityId = LedgerSimpleAddressWallet.identityId(identity);
@@ -328,20 +334,13 @@ export class LedgerSimpleAddressWallet implements Wallet {
       throw new Error("Got empty chain ID when tying to build a local identity.");
     }
 
-    const Identity: Identity = {
+    const identity: Identity = {
       chainId: chainId,
       pubkey: {
         algo: Algorithm.Ed25519, // hardcoded until we support more curves in the ledger app
         data: bytes,
       },
     };
-    return Identity;
-  }
-
-  public async previewIdentity(
-    _chainId: ChainId,
-    _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
-  ): Promise<Identity> {
-    throw new Error("Not yet implemented");
+    return identity;
   }
 }

@@ -264,7 +264,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
     prehashType: PrehashType,
   ): Promise<SignatureBytes> {
     if (prehashType !== PrehashType.Sha512) {
-      throw new Error("Only prehash typer sha512 is supported on the Ledger");
+      throw new Error("Only prehash type sha512 is supported on the Ledger");
     }
 
     if (!this.deviceTracker.running) {
@@ -281,7 +281,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
   }
 
   public printableSecret(): string {
-    throw new Error("Extrating the secret from a hardware wallet is not possible");
+    throw new Error("Extracting the secret from a hardware wallet is not possible");
   }
 
   public serialize(): WalletSerializationString {

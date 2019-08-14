@@ -1,3 +1,5 @@
+import "babel-polyfill";
+
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import { Device, devices } from "node-hid";
 

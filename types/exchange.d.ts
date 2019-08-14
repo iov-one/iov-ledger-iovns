@@ -1,4 +1,5 @@
 /// <reference types="ledgerhq__hw-transport-node-hid" />
+import "babel-polyfill";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import { Device } from "node-hid";
 export declare function getFirstLedgerNanoS(): Device | undefined;

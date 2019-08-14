@@ -1,3 +1,5 @@
+import "babel-polyfill";
+
 import { DefaultValueProducer, ValueAndUpdates } from "@iov/stream";
 import TransportNodeHid, { DescriptorEvent, Subscription } from "@ledgerhq/hw-transport-node-hid";
 

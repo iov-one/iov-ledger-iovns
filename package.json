@@ -33,11 +33,11 @@
     "@iov/encoding": "^0.12.0",
     "@iov/keycontrol": "^0.12.0",
     "@iov/stream": "^0.12.0",
-    "@ledgerhq/hw-transport-node-hid": "^4.22.0",
-    "@types/node-hid": "^0.7.0",
+    "@ledgerhq/hw-transport-node-hid": "^4.68.2",
+    "@types/node-hid": "^0.7.2",
     "@types/random-js": "^1.0.31",
     "babel-runtime": "^6",
-    "node-hid": "^0.7.3",
+    "node-hid": "^0.7.9",
     "random-js": "^1.0.8"
   },
   "devDependencies": {
@@ -47,10 +47,10 @@
     "jasmine-console-reporter": "^3.0.2",
     "prettier": "^1.16.0",
     "shx": "^0.3.2",
+    "ts-node": "^7.0.0",
     "tslint": "^5.12.1",
     "tslint-config-prettier": "^1.13.0",
     "tslint-immutable": "^5.1.0",
-    "ts-node": "^7.0.0",
     "typedoc": "^0.14.2",
     "typescript": "~3.2"
   }

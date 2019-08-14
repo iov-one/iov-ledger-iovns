@@ -313,6 +313,13 @@ export class LedgerSimpleAddressWallet implements Wallet {
     return new LedgerSimpleAddressWallet(this.serialize());
   }
 
+  public async previewIdentity(
+    _chainId: ChainId,
+    _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
+  ): Promise<Identity> {
+    throw new Error("Not yet implemented");
+  }
+
   // This throws an exception when address index is missing
   private simpleAddressIndex(identity: Identity): number {
     const identityId = LedgerSimpleAddressWallet.identityId(identity);
@@ -336,12 +343,5 @@ export class LedgerSimpleAddressWallet implements Wallet {
       },
     };
     return Identity;
-  }
-
-  public async previewIdentity(
-    _chainId: ChainId,
-    _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
-  ): Promise<Identity> {
-    throw new Error("Not yet implemented");
   }
 }

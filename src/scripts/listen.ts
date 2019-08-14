@@ -3,7 +3,7 @@ import TransportNodeHid, { DescriptorEvent } from "@ledgerhq/hw-transport-node-h
 import { Device } from "node-hid";
 
 // tslint:disable-next-line:readonly-array
-const events: Array<DescriptorEvent<string>> = [];
+const events: DescriptorEvent<string>[] = [];
 
 const listener = {
   next: (e: DescriptorEvent<string>) => events.push(e),

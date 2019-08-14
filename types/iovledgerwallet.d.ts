@@ -13,6 +13,7 @@ export declare class IovLedgerWallet implements Wallet {
     private static readonly idsPrng;
     private static generateId;
     private static identityId;
+    private static buildIdentity;
     readonly id: WalletId;
     readonly label: ValueAndUpdates<string | undefined>;
     readonly canSign: ValueAndUpdates<boolean>;
@@ -51,5 +52,4 @@ export declare class IovLedgerWallet implements Wallet {
     clone(): Wallet;
     previewIdentity(_chainId: ChainId, _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number): Promise<Identity>;
     private simpleAddressIndex;
-    private buildIdentity;
 }

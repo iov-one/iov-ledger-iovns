@@ -13,7 +13,7 @@ import {
 } from "@iov/bcp";
 import { bnsCodec } from "@iov/bns";
 import { Ed25519, Sha512 } from "@iov/crypto";
-import { Encoding, Int53 } from "@iov/encoding";
+import { Encoding } from "@iov/encoding";
 
 import { appVersion, getPublicKeyWithIndex, signTransactionWithIndex } from "./app";
 import {
@@ -130,7 +130,7 @@ describe("Sign with ledger app", () => {
       },
       memo: "Hi Mom!",
     };
-    const nonce = new Int53(123) as Nonce;
+    const nonce = 123 as Nonce;
     const { bytes, prehashType } = bnsCodec.bytesToSign(tx, nonce);
 
     const signature = await signTransactionWithIndex(transport!, bytes, 0);
@@ -176,7 +176,7 @@ describe("Sign with ledger app", () => {
         tokenTicker: "PATH" as TokenTicker,
       },
     };
-    const nonce = new Int53(5) as Nonce;
+    const nonce = 5 as Nonce;
     const { bytes, prehashType } = bnsCodec.bytesToSign(tx, nonce);
 
     const signature = await signTransactionWithIndex(transport!, bytes, simpleAddressIndex);

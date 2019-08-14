@@ -24,6 +24,7 @@ import { DefaultValueProducer, ValueAndUpdates } from "@iov/stream";
 import { getPublicKeyWithIndex, signTransactionWithIndex } from "./app";
 import { connectToFirstLedger } from "./exchange";
 import { LedgerState, StateTracker } from "./statetracker";
+import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 
 interface PubkeySerialization {
   readonly algo: string;
@@ -335,5 +336,12 @@ export class LedgerSimpleAddressWallet implements Wallet {
       },
     };
     return publicIdentity;
+  }
+
+  public async previewIdentity(
+    _chainId: ChainId,
+    _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
+  ): Promise<PublicIdentity> {
+    throw new Error("Not yet implemented");
   }
 }

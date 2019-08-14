@@ -1,3 +1,4 @@
+import "babel-polyfill";
 import { ValueAndUpdates } from "@iov/stream";
 export declare enum LedgerState {
     Disconnected = 0,

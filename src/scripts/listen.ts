@@ -1,4 +1,6 @@
 // tslint:disable:no-console
+import "babel-polyfill";
+
 import TransportNodeHid, { DescriptorEvent } from "@ledgerhq/hw-transport-node-hid";
 import { Device } from "node-hid";
 

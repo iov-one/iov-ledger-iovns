@@ -1,3 +1,5 @@
+import "babel-polyfill";
+
 import { Bip39, Ed25519, EnglishMnemonic, Slip10, Slip10Curve, Slip10RawIndex } from "@iov/crypto";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 

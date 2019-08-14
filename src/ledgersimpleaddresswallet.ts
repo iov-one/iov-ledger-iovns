@@ -10,7 +10,7 @@ import {
   PublicKeyBytes,
   SignableBytes,
   SignatureBytes,
-} from "@iov/bcp-types";
+} from "@iov/bcp";
 import { Encoding } from "@iov/encoding";
 import {
   Keyring,

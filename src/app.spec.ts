@@ -1,5 +1,3 @@
-import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-
 import {
   Address,
   Algorithm,
@@ -15,6 +13,7 @@ import {
 import { bnsCodec } from "@iov/bns";
 import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
+import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 
 import { appVersion, getPublicKeyWithIndex, signTransactionWithIndex } from "./app";
 import {

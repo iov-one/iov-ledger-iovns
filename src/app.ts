@@ -1,7 +1,6 @@
-import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-
 import { Slip10RawIndex } from "@iov/crypto";
 import { Uint32 } from "@iov/encoding";
+import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 
 import { sendChunks } from "./exchange";
 

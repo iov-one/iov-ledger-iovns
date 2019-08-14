@@ -1,16 +1,14 @@
 // tslint:disable:readonly-array
-import PseudoRandom from "random-js";
-import { As } from "type-tagger";
-
 import {
   Algorithm,
   ChainId,
-  PrehashType,
   Identity,
+  PrehashType,
   PubkeyBytes,
   SignableBytes,
   SignatureBytes,
 } from "@iov/bcp";
+import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
 import {
   Keyring,
@@ -20,11 +18,12 @@ import {
   WalletSerializationString,
 } from "@iov/keycontrol";
 import { DefaultValueProducer, ValueAndUpdates } from "@iov/stream";
+import PseudoRandom from "random-js";
+import { As } from "type-tagger";
 
 import { getPublicKeyWithIndex, signTransactionWithIndex } from "./app";
 import { connectToFirstLedger } from "./exchange";
 import { LedgerState, StateTracker } from "./statetracker";
-import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 
 interface PubkeySerialization {
   readonly algo: string;

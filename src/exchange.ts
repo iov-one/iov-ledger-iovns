@@ -8,7 +8,7 @@ async function sleep(ms: number): Promise<void> {
 async function retry<ResultType>(
   subject: () => ResultType | undefined | Promise<ResultType | undefined>,
   retriesLeft: number,
-  retryNumber: number = 1,
+  retryNumber = 1,
 ): Promise<ResultType | undefined> {
   if (retriesLeft <= 0) {
     return undefined;

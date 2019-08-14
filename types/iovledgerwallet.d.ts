@@ -50,6 +50,6 @@ export declare class IovLedgerWallet implements Wallet {
     printableSecret(): string;
     serialize(): WalletSerializationString;
     clone(): Wallet;
-    previewIdentity(_chainId: ChainId, _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number): Promise<Identity>;
+    previewIdentity(chainId: ChainId, options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number): Promise<Identity>;
     private simpleAddressIndex;
 }

@@ -24,7 +24,7 @@ describe("Check key derivation", () => {
   it("compare public keys", async () => {
     pendingWithoutSeededLedger();
 
-    const checkKey = async (i: number) => {
+    const checkKey = async (i: number): Promise<void> => {
       const hdPath: ReadonlyArray<Slip10RawIndex> = [purpose, Slip10RawIndex.hardened(i)];
       const seed = await Bip39.mnemonicToSeed(mneumonic);
       const res = Slip10.derivePath(Slip10Curve.Ed25519, seed, hdPath);

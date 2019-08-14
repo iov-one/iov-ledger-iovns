@@ -9,6 +9,14 @@ const cmdSignWithPath = 3;
 const cmdPubkeyWithPath = 5;
 const cmdAppVersion = 0xca;
 
+function decodeUint32(data: Uint8Array): number {
+  return Uint32.fromBigEndianBytes(data).toNumber();
+}
+
+function encodeUint32(num: number): Uint8Array {
+  return new Uint8Array(new Uint32(num).toBytesBigEndian());
+}
+
 export async function getPublicKeyWithIndex(transport: TransportNodeHid, i: number): Promise<Uint8Array> {
   const pathComponent = Slip10RawIndex.hardened(i).toNumber();
   return sendChunks(transport, appCode, cmdPubkeyWithPath, encodeUint32(pathComponent));
@@ -33,12 +41,4 @@ export async function appVersion(transport: TransportNodeHid): Promise<number> {
     );
   }
   return decodeUint32(response.slice(4, 8));
-}
-
-function decodeUint32(data: Uint8Array): number {
-  return Uint32.fromBigEndianBytes(data).toNumber();
-}
-
-function encodeUint32(num: number): Uint8Array {
-  return new Uint8Array(new Uint32(num).toBytesBigEndian());
 }

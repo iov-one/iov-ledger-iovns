@@ -244,11 +244,12 @@ describe("LedgerSimpleAddressWallet", () => {
     expect(signature.length).toEqual(64);
 
     switch (prehashType) {
-      case PrehashType.Sha512:
+      case PrehashType.Sha512: {
         const prehash = new Sha512(bytes).digest();
         const valid = await Ed25519.verifySignature(signature, prehash, newIdentity.pubkey.data);
         expect(valid).toEqual(true);
         break;
+      }
       default:
         fail("Unexpected prehash type");
     }

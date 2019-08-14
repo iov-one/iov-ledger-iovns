@@ -127,11 +127,12 @@ describe("Sign with ledger app", () => {
 
     // verify signature from Ledger
     switch (prehashType) {
-      case PrehashType.Sha512:
+      case PrehashType.Sha512: {
         const prehash = new Sha512(bytes).digest();
         const valid = await Ed25519.verifySignature(signature, prehash, pubkey);
         expect(valid).toEqual(true);
         break;
+      }
       default:
         fail("Unexpected prehash type");
     }
@@ -174,11 +175,12 @@ describe("Sign with ledger app", () => {
 
     // verify signature from Ledger
     switch (prehashType) {
-      case PrehashType.Sha512:
+      case PrehashType.Sha512: {
         const prehash = new Sha512(bytes).digest();
         const valid = await Ed25519.verifySignature(signature, prehash, pubkey);
         expect(valid).toEqual(true);
         break;
+      }
       default:
         fail("Unexpected prehash type");
     }

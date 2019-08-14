@@ -71,14 +71,6 @@ export async function connectToFirstLedger(): Promise<TransportNodeHid> {
   return transport;
 }
 
-// checkAndRemoveStatus ensures the last two bytes are 0x9000
-// and returns the response with status code removed,
-// or throws an error if not the case
-export function checkAndRemoveStatus(resp: Uint8Array): Uint8Array {
-  checkStatus(resp);
-  return resp.slice(0, resp.length - 2);
-}
-
 export class LedgerErrorResponse extends Error {
   constructor(public readonly code: number) {
     super("response with error code: 0x" + code.toString(16));
@@ -95,6 +87,14 @@ function checkStatus(resp: Uint8Array): void {
   if (status !== 0x9000) {
     throw new LedgerErrorResponse(status);
   }
+}
+
+// checkAndRemoveStatus ensures the last two bytes are 0x9000
+// and returns the response with status code removed,
+// or throws an error if not the case
+export function checkAndRemoveStatus(resp: Uint8Array): Uint8Array {
+  checkStatus(resp);
+  return resp.slice(0, resp.length - 2);
 }
 
 // sendChunks will break the message into multiple chunks as needed

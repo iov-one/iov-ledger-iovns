@@ -1,4 +1,13 @@
-import { Address, Algorithm, ChainId, Nonce, PrehashType, SendTransaction, TokenTicker } from "@iov/bcp";
+import {
+  Address,
+  Algorithm,
+  ChainId,
+  Nonce,
+  PrehashType,
+  SendTransaction,
+  TokenTicker,
+  WithCreator,
+} from "@iov/bcp";
 import { bnsCodec } from "@iov/bns";
 import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
@@ -215,9 +224,10 @@ describe("LedgerSimpleAddressWallet", () => {
 
     await wallet.canSign.waitFor(true);
 
-    const tx: SendTransaction = {
+    const tx: SendTransaction & WithCreator = {
       kind: "bcp/send",
       creator: newIdentity,
+      sender: bnsCodec.identityToAddress(newIdentity),
       recipient: "tiov1zg62hngqqz4qqq8lluqqp2sqqqfrf27dzrrmea" as Address,
       amount: {
         // 77.01001 PATH

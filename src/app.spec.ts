@@ -4,12 +4,13 @@ import {
   Address,
   Algorithm,
   ChainId,
+  Identity,
   Nonce,
   PrehashType,
-  PublicIdentity,
-  PublicKeyBytes,
+  PubkeyBytes,
   SendTransaction,
   TokenTicker,
+  WithCreator,
 } from "@iov/bcp";
 import { bnsCodec } from "@iov/bns";
 import { Ed25519, Sha512 } from "@iov/crypto";
@@ -110,17 +111,18 @@ describe("Sign with ledger app", () => {
     const pubkey = await getPublicKeyWithIndex(transport!, 0);
     expect(pubkey.length).toEqual(32);
 
-    const sender: PublicIdentity = {
+    const sender: Identity = {
       chainId: "test-bns-ledger" as ChainId,
       pubkey: {
         algo: Algorithm.Ed25519,
-        data: pubkey as PublicKeyBytes,
+        data: pubkey as PubkeyBytes,
       },
     };
 
-    const tx: SendTransaction = {
+    const tx: SendTransaction & WithCreator = {
       kind: "bcp/send",
       creator: sender,
+      sender: bnsCodec.identityToAddress(sender),
       recipient: "tiov1qy352eufqy352eufqy352eufqy352eufpralqn" as Address,
       amount: {
         // 1234.789 LGR
@@ -157,17 +159,18 @@ describe("Sign with ledger app", () => {
     const pubkey = await getPublicKeyWithIndex(transport!, simpleAddressIndex);
     expect(pubkey.length).toEqual(32);
 
-    const sender: PublicIdentity = {
+    const sender: Identity = {
       chainId: "test-ledger-paths" as ChainId,
       pubkey: {
         algo: Algorithm.Ed25519,
-        data: pubkey as PublicKeyBytes,
+        data: pubkey as PubkeyBytes,
       },
     };
 
-    const tx: SendTransaction = {
+    const tx: SendTransaction & WithCreator = {
       kind: "bcp/send",
       creator: sender,
+      sender: bnsCodec.identityToAddress(sender),
       recipient: "tiov1zg62hngqqz4qqq8lluqqp2sqqqfrf27dzrrmea" as Address,
       amount: {
         // 77.01001 PATH

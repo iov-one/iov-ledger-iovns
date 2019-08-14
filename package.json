@@ -15,7 +15,8 @@
   },
   "scripts": {
     "docs": "shx rm -rf docs && typedoc --options typedoc.js",
-    "lint": "cross-env-shell \"tslint -t verbose --project . ${TSLINT_FLAGS}\"",
+    "lint": "eslint --max-warnings 0 \"**/*.{js,ts}\" && tslint -t verbose --project .",
+    "lint-fix": "eslint --max-warnings 0 \"**/*.{js,ts}\" --fix",
     "format": "prettier --write --loglevel warn \"./src/**/*.ts\"",
     "test-node": "node jasmine-testrunner.js",
     "test": "yarn build-or-skip && yarn test-node",

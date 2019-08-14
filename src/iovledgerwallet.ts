@@ -113,6 +113,21 @@ export class IovLedgerWallet implements Wallet {
     return id as IdentityId;
   }
 
+  private static buildIdentity(chainId: ChainId, bytes: PubkeyBytes): Identity {
+    if (!chainId) {
+      throw new Error("Got empty chain ID when tying to build a local identity.");
+    }
+
+    const identity: Identity = {
+      chainId: chainId,
+      pubkey: {
+        algo: Algorithm.Ed25519, // hardcoded until we support more curves in the ledger app
+        data: bytes,
+      },
+    };
+    return identity;
+  }
+
   public readonly id: WalletId;
   public readonly label: ValueAndUpdates<string | undefined>;
   public readonly canSign: ValueAndUpdates<boolean>;
@@ -157,7 +172,7 @@ export class IovLedgerWallet implements Wallet {
 
       // identities
       for (const record of decodedData.identities) {
-        const identity = this.buildIdentity(
+        const identity = IovLedgerWallet.buildIdentity(
           record.localIdentity.chainId as ChainId,
           Encoding.fromHex(record.localIdentity.pubkey.data) as PubkeyBytes,
         );
@@ -207,17 +222,7 @@ export class IovLedgerWallet implements Wallet {
       throw new Error("Expected numeric argument");
     }
     const index = options;
-
-    if (!this.deviceTracker.running) {
-      throw new Error("Device tracking off. Did you call startDeviceTracking()?");
-    }
-
-    await this.deviceState.waitFor(LedgerState.IovAppOpen);
-
-    const transport = await connectToFirstLedger();
-
-    const pubkey = await getPublicKeyWithIndex(transport, index);
-    const newIdentity = this.buildIdentity(chainId, pubkey as PubkeyBytes);
+    const newIdentity = await this.previewIdentity(chainId, options);
     const newIdentityId = IovLedgerWallet.identityId(newIdentity);
 
     if (this.identities.find(i => IovLedgerWallet.identityId(i) === newIdentityId)) {
@@ -313,10 +318,24 @@ export class IovLedgerWallet implements Wallet {
   }
 
   public async previewIdentity(
-    _chainId: ChainId,
-    _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
+    chainId: ChainId,
+    options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
   ): Promise<Identity> {
-    throw new Error("Not yet implemented");
+    if (typeof options !== "number") {
+      throw new Error("Expected numeric argument");
+    }
+    const index = options;
+
+    if (!this.deviceTracker.running) {
+      throw new Error("Device tracking off. Did you call startDeviceTracking()?");
+    }
+
+    await this.deviceState.waitFor(LedgerState.IovAppOpen);
+
+    const transport = await connectToFirstLedger();
+    const pubkey = await getPublicKeyWithIndex(transport, index);
+
+    return IovLedgerWallet.buildIdentity(chainId, pubkey as PubkeyBytes);
   }
 
   // This throws an exception when address index is missing
@@ -327,20 +346,5 @@ export class IovLedgerWallet implements Wallet {
       throw new Error("No address index found for identity '" + identityId + "'");
     }
     return out;
-  }
-
-  private buildIdentity(chainId: ChainId, bytes: PubkeyBytes): Identity {
-    if (!chainId) {
-      throw new Error("Got empty chain ID when tying to build a local identity.");
-    }
-
-    const identity: Identity = {
-      chainId: chainId,
-      pubkey: {
-        algo: Algorithm.Ed25519, // hardcoded until we support more curves in the ledger app
-        data: bytes,
-      },
-    };
-    return identity;
   }
 }

@@ -260,7 +260,7 @@ describe("IovLedgerWallet", () => {
   it("throws when trying to export the secret", () => {
     const wallet = new IovLedgerWallet();
     expect(() => wallet.printableSecret()).toThrowError(
-      /extrating the secret from a hardware wallet is not possible/i,
+      /extracting the secret from a hardware wallet is not possible/i,
     );
   });
 

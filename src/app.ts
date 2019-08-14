@@ -11,7 +11,7 @@ const cmdPubkeyWithPath = 5;
 const cmdAppVersion = 0xca;
 
 export function getPublicKeyWithIndex(transport: TransportNodeHid, i: number): Promise<Uint8Array> {
-  const pathComponent = Slip10RawIndex.hardened(i).asNumber();
+  const pathComponent = Slip10RawIndex.hardened(i).toNumber();
   return sendChunks(transport, appCode, cmdPubkeyWithPath, encodeUint32(pathComponent));
 }
 
@@ -20,7 +20,7 @@ export function signTransactionWithIndex(
   transaction: Uint8Array,
   i: number,
 ): Promise<Uint8Array> {
-  const pathComponent = Slip10RawIndex.hardened(i).asNumber();
+  const pathComponent = Slip10RawIndex.hardened(i).toNumber();
   const data = new Uint8Array([...encodeUint32(pathComponent), ...transaction]);
   return sendChunks(transport, appCode, cmdSignWithPath, data);
 }
@@ -37,7 +37,7 @@ export async function appVersion(transport: TransportNodeHid): Promise<number> {
 }
 
 function decodeUint32(data: Uint8Array): number {
-  return Uint32.fromBigEndianBytes(data).asNumber();
+  return Uint32.fromBigEndianBytes(data).toNumber();
 }
 
 function encodeUint32(num: number): Uint8Array {

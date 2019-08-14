@@ -6,11 +6,11 @@ import {
   Algorithm,
   ChainId,
   PrehashType,
-  PublicIdentity,
-  PublicKeyBytes,
+  Identity,
+  PubkeyBytes,
   SignableBytes,
   SignatureBytes,
-} from "@iov/bcp-types";
+} from "@iov/bcp";
 import { Encoding } from "@iov/encoding";
 import {
   Keyring,
@@ -24,6 +24,7 @@ import { DefaultValueProducer, ValueAndUpdates } from "@iov/stream";
 import { getPublicKeyWithIndex, signTransactionWithIndex } from "./app";
 import { connectToFirstLedger } from "./exchange";
 import { LedgerState, StateTracker } from "./statetracker";
+import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 
 interface PubkeySerialization {
   readonly algo: string;
@@ -108,7 +109,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
     return code as WalletId;
   }
 
-  private static identityId(identity: PublicIdentity): IdentityId {
+  private static identityId(identity: Identity): IdentityId {
     const id = [identity.chainId, identity.pubkey.algo, Encoding.toHex(identity.pubkey.data)].join("|");
     return id as IdentityId;
   }
@@ -125,7 +126,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
   private readonly canSignProducer: DefaultValueProducer<boolean>;
 
   // identities
-  private readonly identities: PublicIdentity[];
+  private readonly identities: Identity[];
   private readonly labels: Map<IdentityId, string | undefined>;
   private readonly simpleAddressIndices: Map<IdentityId, number>;
 
@@ -142,7 +143,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
 
     let id: WalletId;
     let label: string | undefined;
-    const identities: PublicIdentity[] = [];
+    const identities: Identity[] = [];
     const simpleAddressIndices = new Map<IdentityId, number>();
     const labels = new Map<IdentityId, string | undefined>();
 
@@ -159,7 +160,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
       for (const record of decodedData.identities) {
         const identity = this.buildIdentity(
           record.localIdentity.chainId as ChainId,
-          Encoding.fromHex(record.localIdentity.pubkey.data) as PublicKeyBytes,
+          Encoding.fromHex(record.localIdentity.pubkey.data) as PubkeyBytes,
         );
         identities.push(identity);
         simpleAddressIndices.set(LedgerSimpleAddressWallet.identityId(identity), record.simpleAddressIndex);
@@ -202,7 +203,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
     this.labelProducer.update(label);
   }
 
-  public async createIdentity(chainId: ChainId, options: unknown): Promise<PublicIdentity> {
+  public async createIdentity(chainId: ChainId, options: unknown): Promise<Identity> {
     if (typeof options !== "number") {
       throw new Error("Expected numeric argument");
     }
@@ -217,7 +218,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
     const transport = await connectToFirstLedger();
 
     const pubkey = await getPublicKeyWithIndex(transport, index);
-    const newIdentity = this.buildIdentity(chainId, pubkey as PublicKeyBytes);
+    const newIdentity = this.buildIdentity(chainId, pubkey as PubkeyBytes);
     const newIdentityId = LedgerSimpleAddressWallet.identityId(newIdentity);
 
     if (this.identities.find(i => LedgerSimpleAddressWallet.identityId(i) === newIdentityId)) {
@@ -233,7 +234,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
     return newIdentity;
   }
 
-  public setIdentityLabel(identity: PublicIdentity, label: string | undefined): void {
+  public setIdentityLabel(identity: Identity, label: string | undefined): void {
     const identityId = LedgerSimpleAddressWallet.identityId(identity);
     const index = this.identities.findIndex(i => LedgerSimpleAddressWallet.identityId(i) === identityId);
     if (index === -1) {
@@ -243,7 +244,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
     this.labels.set(identityId, label);
   }
 
-  public getIdentityLabel(identity: PublicIdentity): string | undefined {
+  public getIdentityLabel(identity: Identity): string | undefined {
     const identityId = LedgerSimpleAddressWallet.identityId(identity);
     const index = this.identities.findIndex(i => LedgerSimpleAddressWallet.identityId(i) === identityId);
     if (index === -1) {
@@ -253,13 +254,13 @@ export class LedgerSimpleAddressWallet implements Wallet {
     return this.labels.get(identityId);
   }
 
-  public getIdentities(): ReadonlyArray<PublicIdentity> {
+  public getIdentities(): ReadonlyArray<Identity> {
     // copy array to avoid internal updates to affect caller and vice versa
     return [...this.identities];
   }
 
   public async createTransactionSignature(
-    identity: PublicIdentity,
+    identity: Identity,
     transactionBytes: SignableBytes,
     prehashType: PrehashType,
   ): Promise<SignatureBytes> {
@@ -313,7 +314,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
   }
 
   // This throws an exception when address index is missing
-  private simpleAddressIndex(identity: PublicIdentity): number {
+  private simpleAddressIndex(identity: Identity): number {
     const identityId = LedgerSimpleAddressWallet.identityId(identity);
     const out = this.simpleAddressIndices.get(identityId);
     if (out === undefined) {
@@ -322,18 +323,25 @@ export class LedgerSimpleAddressWallet implements Wallet {
     return out;
   }
 
-  private buildIdentity(chainId: ChainId, bytes: PublicKeyBytes): PublicIdentity {
+  private buildIdentity(chainId: ChainId, bytes: PubkeyBytes): Identity {
     if (!chainId) {
       throw new Error("Got empty chain ID when tying to build a local identity.");
     }
 
-    const publicIdentity: PublicIdentity = {
+    const Identity: Identity = {
       chainId: chainId,
       pubkey: {
         algo: Algorithm.Ed25519, // hardcoded until we support more curves in the ledger app
         data: bytes,
       },
     };
-    return publicIdentity;
+    return Identity;
+  }
+
+  public async previewIdentity(
+    _chainId: ChainId,
+    _options: Ed25519Keypair | ReadonlyArray<Slip10RawIndex> | number,
+  ): Promise<Identity> {
+    throw new Error("Not yet implemented");
   }
 }

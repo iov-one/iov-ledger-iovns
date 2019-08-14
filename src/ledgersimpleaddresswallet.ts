@@ -335,13 +335,13 @@ export class LedgerSimpleAddressWallet implements Wallet {
       throw new Error("Got empty chain ID when tying to build a local identity.");
     }
 
-    const Identity: Identity = {
+    const identity: Identity = {
       chainId: chainId,
       pubkey: {
         algo: Algorithm.Ed25519, // hardcoded until we support more curves in the ledger app
         data: bytes,
       },
     };
-    return Identity;
+    return identity;
   }
 }

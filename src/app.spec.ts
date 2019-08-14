@@ -34,44 +34,32 @@ describe("Query ledger app", () => {
     }
   });
 
-  it("get proper version", done => {
+  it("get proper version", async () => {
     pendingWithoutLedger();
 
-    appVersion(transport!)
-      .catch(err => fail(err))
-      .then(num => expect(num).toEqual(0x0100))
-      .then(done);
+    const version = await appVersion(transport!);
+    expect(version).toEqual(0x0100);
   });
 
-  it("can read the public key by path", done => {
+  it("can read the public key by path", async () => {
     pendingWithoutLedger();
 
-    const checkKey = async () => {
-      const pubkey = await getPublicKeyWithIndex(transport!, 0);
-      expect(pubkey).toBeTruthy();
-      expect(pubkey.length).toEqual(32);
-    };
-    checkKey()
-      .catch(err => fail(err))
-      .then(done);
+    const pubkey = await getPublicKeyWithIndex(transport!, 0);
+    expect(pubkey).toBeTruthy();
+    expect(pubkey.length).toEqual(32);
   });
 
-  it("can get multiple public keys by path", done => {
+  it("can get multiple public keys by path", async () => {
     pendingWithoutLedger();
 
-    const checkKey = async () => {
-      const pubkey0 = await getPublicKeyWithIndex(transport!, 0);
-      expect(pubkey0).toBeTruthy();
-      expect(pubkey0.length).toEqual(32);
+    const pubkey0 = await getPublicKeyWithIndex(transport!, 0);
+    expect(pubkey0).toBeTruthy();
+    expect(pubkey0.length).toEqual(32);
 
-      const pubkey1 = await getPublicKeyWithIndex(transport!, 267);
-      expect(pubkey1).toBeTruthy();
-      expect(pubkey1.length).toEqual(32);
-      expect(pubkey1).not.toEqual(pubkey0);
-    };
-    checkKey()
-      .catch(err => fail(err))
-      .then(done);
+    const pubkey1 = await getPublicKeyWithIndex(transport!, 267);
+    expect(pubkey1).toBeTruthy();
+    expect(pubkey1.length).toEqual(32);
+    expect(pubkey1).not.toEqual(pubkey0);
   });
 });
 

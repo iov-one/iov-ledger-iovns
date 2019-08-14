@@ -1,7 +1,7 @@
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import { Device, devices } from "node-hid";
 
-function sleep(ms: number): Promise<void> {
+async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 

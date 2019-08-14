@@ -22,7 +22,7 @@ describe("Check key derivation", () => {
     }
   });
 
-  it("compare public keys", done => {
+  it("compare public keys", async () => {
     pendingWithoutSeededLedger();
 
     const checkKey = async (i: number) => {
@@ -42,18 +42,6 @@ describe("Check key derivation", () => {
       expect(new Uint8Array(hwPubkey)).toEqual(swPubkey);
     };
 
-    const checkMultipleKeys = async () => {
-      await checkKey(3);
-      await checkKey(0);
-      await checkKey(17);
-      await checkKey(1346);
-      await checkKey(123456);
-      await checkKey(53252985);
-    };
-
-    // run a few different
-    checkMultipleKeys()
-      .catch(err => fail(err))
-      .then(done);
+    await Promise.all([3, 0, 17, 1346, 123456, 53252985].map(checkKey));
   });
 });

@@ -1,2 +1,2 @@
-export { LedgerSimpleAddressWallet } from "./iovledgerwallet";
+export { IovLedgerWallet } from "./iovledgerwallet";
 export { LedgerState } from "./statetracker";

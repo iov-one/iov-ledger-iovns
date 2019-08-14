@@ -87,7 +87,7 @@ function deserialize(data: WalletSerializationString): IovLedgerWalletSerializat
 type IdentityId = string & As<"identity-id">;
 
 export class IovLedgerWallet implements Wallet {
-  public static readonly implementationId = "ledger-simpleaddress" as WalletImplementationIdString;
+  public static readonly implementationId = "iov-ledger" as WalletImplementationIdString;
 
   /**
    * A convenience function to register this wallet type with the global Keyring class

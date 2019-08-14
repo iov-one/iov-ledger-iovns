@@ -14,7 +14,7 @@ import { Encoding } from "@iov/encoding";
 import { WalletId, WalletSerializationString } from "@iov/keycontrol";
 
 import { pendingWithoutInteractiveLedger, pendingWithoutLedger } from "./common.spec";
-import { LedgerSimpleAddressWallet } from "./ledgersimpleaddresswallet";
+import { LedgerSimpleAddressWallet } from "./iovledgerwallet";
 import { LedgerState } from "./statetracker";
 
 const { toHex } = Encoding;

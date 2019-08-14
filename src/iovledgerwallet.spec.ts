@@ -14,40 +14,40 @@ import { Encoding } from "@iov/encoding";
 import { WalletId, WalletSerializationString } from "@iov/keycontrol";
 
 import { pendingWithoutInteractiveLedger, pendingWithoutLedger } from "./common.spec";
-import { LedgerSimpleAddressWallet } from "./ledgersimpleaddresswallet";
+import { IovLedgerWallet } from "./iovledgerwallet";
 import { LedgerState } from "./statetracker";
 
 const { toHex } = Encoding;
 
-describe("LedgerSimpleAddressWallet", () => {
+describe("IovLedgerWallet", () => {
   const defaultChain = "chain123" as ChainId;
 
   it("can be constructed", () => {
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     expect(wallet).toBeTruthy();
     expect(wallet.id).toMatch(/^[a-zA-Z0-9]+$/);
   });
 
   it("is empty after construction", () => {
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     expect(wallet.label.value).toBeUndefined();
     expect(wallet.getIdentities().length).toEqual(0);
   });
 
   it("generates unique ID on creation", async () => {
     const walletIds: ReadonlyArray<WalletId> = [
-      new LedgerSimpleAddressWallet(),
-      new LedgerSimpleAddressWallet(),
-      new LedgerSimpleAddressWallet(),
-      new LedgerSimpleAddressWallet(),
-      new LedgerSimpleAddressWallet(),
+      new IovLedgerWallet(),
+      new IovLedgerWallet(),
+      new IovLedgerWallet(),
+      new IovLedgerWallet(),
+      new IovLedgerWallet(),
     ].map(wallet => wallet.id);
     const uniqueWalletIds = new Set(walletIds);
     expect(uniqueWalletIds.size).toEqual(5);
   });
 
   it("can have a label", () => {
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     expect(wallet.label.value).toBeUndefined();
 
     wallet.setLabel("foo");
@@ -60,7 +60,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("can create an identity", async () => {
     pendingWithoutLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
     expect(newIdentity).toBeTruthy();
@@ -72,7 +72,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("can load a newly created identity", async () => {
     pendingWithoutLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
 
@@ -87,7 +87,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("can create multiple identities", async () => {
     pendingWithoutLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     const newIdentity1 = await wallet.createIdentity(defaultChain, 0);
     const newIdentity2 = await wallet.createIdentity(defaultChain, 1);
@@ -116,7 +116,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("can create different identities with the same keypair", async () => {
     pendingWithoutLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     await wallet.createIdentity("chain1" as ChainId, 0);
     await wallet.createIdentity("chain2" as ChainId, 0);
@@ -132,7 +132,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("throws when adding the same identity index twice", async () => {
     pendingWithoutLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     await wallet.createIdentity(defaultChain, 0);
     await wallet
@@ -145,7 +145,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("can set, change and unset an identity label", async () => {
     pendingWithoutLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
     expect(wallet.getIdentityLabel(newIdentity)).toBeUndefined();
@@ -164,7 +164,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("has disconnected device state when created", () => {
     pendingWithoutInteractiveLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     expect(wallet.deviceState.value).toEqual(LedgerState.Disconnected);
     wallet.stopDeviceTracking();
@@ -173,7 +173,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("changed device state to app open after some time", async () => {
     pendingWithoutInteractiveLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     expect(wallet.deviceState.value).toEqual(LedgerState.Disconnected);
 
@@ -185,14 +185,14 @@ describe("LedgerSimpleAddressWallet", () => {
   it("cannot sign when created", () => {
     pendingWithoutInteractiveLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     expect(wallet.canSign.value).toEqual(false);
   });
 
   it("can sign after some time", async () => {
     pendingWithoutInteractiveLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     expect(wallet.canSign.value).toEqual(false);
 
@@ -204,7 +204,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("cannot sign when device tracking is off", async () => {
     pendingWithoutInteractiveLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     expect(wallet.canSign.value).toEqual(false);
 
     wallet.startDeviceTracking();
@@ -218,7 +218,7 @@ describe("LedgerSimpleAddressWallet", () => {
   it("can sign", async () => {
     pendingWithoutInteractiveLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
 
@@ -258,16 +258,16 @@ describe("LedgerSimpleAddressWallet", () => {
   });
 
   it("throws when trying to export the secret", () => {
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     expect(() => wallet.printableSecret()).toThrowError(
-      /extrating the secret from a hardware wallet is not possible/i,
+      /extracting the secret from a hardware wallet is not possible/i,
     );
   });
 
   it("can serialize multiple identities", async () => {
     pendingWithoutLedger();
 
-    const wallet = new LedgerSimpleAddressWallet();
+    const wallet = new IovLedgerWallet();
     wallet.startDeviceTracking();
     wallet.setLabel("wallet with 3 identities");
     const identity1 = await wallet.createIdentity(defaultChain, 0);
@@ -325,7 +325,7 @@ describe("LedgerSimpleAddressWallet", () => {
           "id": "7g97g98huhdd7",
           "identities": []
         }` as WalletSerializationString;
-      const wallet = new LedgerSimpleAddressWallet(serialized);
+      const wallet = new IovLedgerWallet(serialized);
       expect(wallet).toBeTruthy();
       expect(wallet.id).toEqual("7g97g98huhdd7");
       expect(wallet.getIdentities().length).toEqual(0);
@@ -348,7 +348,7 @@ describe("LedgerSimpleAddressWallet", () => {
             }
           ]
         }` as WalletSerializationString;
-      const wallet = new LedgerSimpleAddressWallet(serialized);
+      const wallet = new IovLedgerWallet(serialized);
       expect(wallet).toBeTruthy();
       expect(wallet.id).toEqual("7g97g98huhdd7");
       expect(wallet.getIdentities().length).toEqual(1);
@@ -384,7 +384,7 @@ describe("LedgerSimpleAddressWallet", () => {
             }
           ]
         }` as WalletSerializationString;
-      const wallet = new LedgerSimpleAddressWallet(serialized);
+      const wallet = new IovLedgerWallet(serialized);
       expect(wallet).toBeTruthy();
       expect(wallet.id).toEqual("7g97g98huhdd7");
       expect(wallet.getIdentities().length).toEqual(2);
@@ -403,13 +403,13 @@ describe("LedgerSimpleAddressWallet", () => {
 
   it("throws for unsupported format version", () => {
     const data = '{ "formatVersion": 123, "id": "7g97g98huhdd7", "identities": [] }' as WalletSerializationString;
-    expect(() => new LedgerSimpleAddressWallet(data)).toThrowError(/unsupported format version/i);
+    expect(() => new IovLedgerWallet(data)).toThrowError(/unsupported format version/i);
   });
 
   it("can serialize and restore a full wallet", async () => {
     pendingWithoutLedger();
 
-    const original = new LedgerSimpleAddressWallet();
+    const original = new IovLedgerWallet();
     original.startDeviceTracking();
     const identity1 = await original.createIdentity(defaultChain, 0);
     const identity2 = await original.createIdentity(defaultChain, 1);
@@ -419,7 +419,7 @@ describe("LedgerSimpleAddressWallet", () => {
     original.setIdentityLabel(identity2, "");
     original.setIdentityLabel(identity3, "foo");
 
-    const restored = new LedgerSimpleAddressWallet(original.serialize());
+    const restored = new IovLedgerWallet(original.serialize());
 
     // pubkeys and labels match
     expect(original.getIdentities()).toEqual(restored.getIdentities());
@@ -444,7 +444,7 @@ describe("LedgerSimpleAddressWallet", () => {
           }
         ]
       }` as WalletSerializationString;
-    const original = new LedgerSimpleAddressWallet(oneIdentitySerialization);
+    const original = new IovLedgerWallet(oneIdentitySerialization);
     const clone = original.clone();
     expect(clone).not.toBe(original);
     expect(clone.serialize()).toEqual(original.serialize());
@@ -452,7 +452,7 @@ describe("LedgerSimpleAddressWallet", () => {
 
   describe("Keyring integration", () => {
     it("wallet type can be registered", () => {
-      LedgerSimpleAddressWallet.registerWithKeyring();
+      IovLedgerWallet.registerWithKeyring();
     });
   });
 });

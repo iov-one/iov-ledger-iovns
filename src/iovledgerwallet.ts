@@ -41,14 +41,14 @@ interface IdentitySerialization {
   readonly simpleAddressIndex: number;
 }
 
-interface LedgerSimpleAddressWalletSerialization {
+interface IovLedgerWalletSerialization {
   readonly formatVersion: number;
   readonly id: string;
   readonly label: string | undefined;
   readonly identities: ReadonlyArray<IdentitySerialization>;
 }
 
-function deserialize(data: WalletSerializationString): LedgerSimpleAddressWalletSerialization {
+function deserialize(data: WalletSerializationString): IovLedgerWalletSerialization {
   const doc = JSON.parse(data);
   const formatVersion = doc.formatVersion;
 
@@ -86,16 +86,16 @@ function deserialize(data: WalletSerializationString): LedgerSimpleAddressWallet
 
 type IdentityId = string & As<"identity-id">;
 
-export class LedgerSimpleAddressWallet implements Wallet {
-  public static readonly implementationId = "ledger-simpleaddress" as WalletImplementationIdString;
+export class IovLedgerWallet implements Wallet {
+  public static readonly implementationId = "iov-ledger" as WalletImplementationIdString;
 
   /**
    * A convenience function to register this wallet type with the global Keyring class
    */
   public static registerWithKeyring(): void {
-    const implId = LedgerSimpleAddressWallet.implementationId;
+    const implId = IovLedgerWallet.implementationId;
     Keyring.registerWalletType(implId, (data: WalletSerializationString) => {
-      return new LedgerSimpleAddressWallet(data);
+      return new IovLedgerWallet(data);
     });
   }
 
@@ -104,7 +104,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
 
   private static generateId(): WalletId {
     // this can be pseudo-random, just used for internal book-keeping
-    const code = PseudoRandom.string(LedgerSimpleAddressWallet.idPool)(LedgerSimpleAddressWallet.idsPrng, 16);
+    const code = PseudoRandom.string(IovLedgerWallet.idPool)(IovLedgerWallet.idsPrng, 16);
     return code as WalletId;
   }
 
@@ -116,7 +116,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
   public readonly id: WalletId;
   public readonly label: ValueAndUpdates<string | undefined>;
   public readonly canSign: ValueAndUpdates<boolean>;
-  public readonly implementationId = LedgerSimpleAddressWallet.implementationId;
+  public readonly implementationId = IovLedgerWallet.implementationId;
   public readonly deviceState: ValueAndUpdates<LedgerState>;
 
   // wallet
@@ -162,11 +162,11 @@ export class LedgerSimpleAddressWallet implements Wallet {
           Encoding.fromHex(record.localIdentity.pubkey.data) as PubkeyBytes,
         );
         identities.push(identity);
-        simpleAddressIndices.set(LedgerSimpleAddressWallet.identityId(identity), record.simpleAddressIndex);
-        labels.set(LedgerSimpleAddressWallet.identityId(identity), record.localIdentity.label);
+        simpleAddressIndices.set(IovLedgerWallet.identityId(identity), record.simpleAddressIndex);
+        labels.set(IovLedgerWallet.identityId(identity), record.localIdentity.label);
       }
     } else {
-      id = LedgerSimpleAddressWallet.generateId();
+      id = IovLedgerWallet.generateId();
     }
 
     this.id = id;
@@ -191,7 +191,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
   /**
    * Turn off tracking USB devices.
    *
-   * Use this to save resources when LedgerSimpleAddressWallet is not used anymore.
+   * Use this to save resources when IovLedgerWallet is not used anymore.
    * With device tracking turned off, canSign and deviceState are not updated anymore.
    */
   public stopDeviceTracking(): void {
@@ -218,9 +218,9 @@ export class LedgerSimpleAddressWallet implements Wallet {
 
     const pubkey = await getPublicKeyWithIndex(transport, index);
     const newIdentity = this.buildIdentity(chainId, pubkey as PubkeyBytes);
-    const newIdentityId = LedgerSimpleAddressWallet.identityId(newIdentity);
+    const newIdentityId = IovLedgerWallet.identityId(newIdentity);
 
-    if (this.identities.find(i => LedgerSimpleAddressWallet.identityId(i) === newIdentityId)) {
+    if (this.identities.find(i => IovLedgerWallet.identityId(i) === newIdentityId)) {
       throw new Error(
         "Identity Index collision: this happens when you try to create multiple identities with the same index in the same wallet.",
       );
@@ -234,8 +234,8 @@ export class LedgerSimpleAddressWallet implements Wallet {
   }
 
   public setIdentityLabel(identity: Identity, label: string | undefined): void {
-    const identityId = LedgerSimpleAddressWallet.identityId(identity);
-    const index = this.identities.findIndex(i => LedgerSimpleAddressWallet.identityId(i) === identityId);
+    const identityId = IovLedgerWallet.identityId(identity);
+    const index = this.identities.findIndex(i => IovLedgerWallet.identityId(i) === identityId);
     if (index === -1) {
       throw new Error("identity with id '" + identityId + "' not found");
     }
@@ -244,8 +244,8 @@ export class LedgerSimpleAddressWallet implements Wallet {
   }
 
   public getIdentityLabel(identity: Identity): string | undefined {
-    const identityId = LedgerSimpleAddressWallet.identityId(identity);
-    const index = this.identities.findIndex(i => LedgerSimpleAddressWallet.identityId(i) === identityId);
+    const identityId = IovLedgerWallet.identityId(identity);
+    const index = this.identities.findIndex(i => IovLedgerWallet.identityId(i) === identityId);
     if (index === -1) {
       throw new Error("identity with id '" + identityId + "' not found");
     }
@@ -285,7 +285,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
   }
 
   public serialize(): WalletSerializationString {
-    const out: LedgerSimpleAddressWalletSerialization = {
+    const out: IovLedgerWalletSerialization = {
       formatVersion: 2,
       label: this.label.value,
       id: this.id,
@@ -309,7 +309,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
   }
 
   public clone(): Wallet {
-    return new LedgerSimpleAddressWallet(this.serialize());
+    return new IovLedgerWallet(this.serialize());
   }
 
   public async previewIdentity(
@@ -321,7 +321,7 @@ export class LedgerSimpleAddressWallet implements Wallet {
 
   // This throws an exception when address index is missing
   private simpleAddressIndex(identity: Identity): number {
-    const identityId = LedgerSimpleAddressWallet.identityId(identity);
+    const identityId = IovLedgerWallet.identityId(identity);
     const out = this.simpleAddressIndices.get(identityId);
     if (out === undefined) {
       throw new Error("No address index found for identity '" + identityId + "'");

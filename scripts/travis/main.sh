@@ -14,6 +14,10 @@ fold_start "yarn-build"
 yarn build
 fold_end
 
+fold_start "yarn-lint"
+yarn lint
+fold_end
+
 fold_start "yarn-test"
 SKIP_BUILD=1 yarn test
 fold_end

@@ -27,7 +27,6 @@
     "lint-fix": "eslint --max-warnings 0 \"**/*.{js,ts}\" --fix",
     "test-node": "node jasmine-testrunner.js",
     "test": "yarn build-or-skip && yarn test-node",
-    "prebuild": "yarn lint-fix",
     "move-types": "shx rm -r ./types/* && shx mv build/types/* ./types && shx rm ./types/*.spec.d.ts",
     "build": "shx rm -rf ./build && tsc && yarn move-types",
     "build-or-skip": "[ -n \"$SKIP_BUILD\" ] || yarn build",

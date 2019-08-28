@@ -11,44 +11,16 @@ that can be dynamically loaded by any app in initialization.
 
 ## Getting started
 
-Create a LedgerSimpleAddressWallet for signing with a Ledger. All
-further functionality is provided by the `UserProfile`.
+Create a wallet for signing with a Ledger.
+All further functionality is provided by the `UserProfile`.
 
 ```ts
 import { UserProfile } from "@iov/core";
-import { LedgerSimpleAddressWallet } from "@iov/ledger-bns";
+import { IovLedgerWallet } from "@iov/ledger-bns";
 
 const profile = new UserProfile();
-profile.addWallet(new LedgerSimpleAddressWallet());
+profile.addWallet(new IovLedgerWallet());
 ```
-
-The @iov/cli [provides further examples](https://github.com/iov-one/iov-core/tree/master/packages/iov-cli#ledger-usage)
-of how to use this wallet.
-
-## Internal interfaces
-
-Those interfaces are for maintainers of the package only and are not exposed
-outside of @iov/ledger-bns.
-
-If you want to call the Ledger directly, you will need to
-[connectToFirstLedger](https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/globals.html#connecttofirstledger) to get a transport,
-which you can [getPublicKeyWithIndex](https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/globals.html#getpublickeywithindex)
-or [signTransactionWithIndex](https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/globals.html#signtransactionwithindex).
-
-You can also try `yarn checkapp` to see events as you change apps on the Ledger,
-which should detect when the proper app is opened and when you leave the app.
-
-To run this code (or even `yarn test`), you must have the bns Ledger app
-installed and open and connected to the computer running tests.
-The tests will prompt you to confirm transactions as well, so when the tests
-freeze, go hit those buttons on the Ledger.
-
-## Compatibility
-
-The code is compatible with https://github.com/iov-one/ledger-bns v0.1.0.
-In particular, it works with the app installed from `mvp1/samecrypto`.
-Please follow the README there and install properly before running this code.
-And make sure the versions match.
 
 ## API Documentation
 

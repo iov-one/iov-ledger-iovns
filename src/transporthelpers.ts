@@ -9,7 +9,7 @@ function environmentIsNodeJs(): boolean {
   );
 }
 
-export class Communication {
+export class TransportHelpers {
   public static async createTransport(): Promise<Transport> {
     if (environmentIsNodeJs()) {
       return TransportNodeHid.create(1000);

@@ -1,4 +1,6 @@
 // tslint:disable:readonly-array
+import "babel-polyfill";
+
 import {
   Algorithm,
   ChainId,
@@ -21,9 +23,8 @@ import { DefaultValueProducer, ValueAndUpdates } from "@iov/stream";
 import PseudoRandom from "random-js";
 import { As } from "type-tagger";
 
-import { getPublicKeyWithIndex, signTransactionWithIndex } from "./app";
-import { connectToFirstLedger } from "./exchange";
-import { LedgerState, StateTracker } from "./statetracker";
+import { Communication } from "./communication";
+import { isLedgerAppAddress, isLedgerAppSignature, LedgerApp } from "./ledgerapp";
 
 interface PubkeySerialization {
   readonly algo: string;
@@ -38,7 +39,7 @@ interface LocalIdentitySerialization {
 
 interface IdentitySerialization {
   readonly localIdentity: LocalIdentitySerialization;
-  readonly simpleAddressIndex: number;
+  readonly accountIndex: number;
 }
 
 interface IovLedgerWalletSerialization {
@@ -130,35 +131,22 @@ export class IovLedgerWallet implements Wallet {
 
   public readonly id: WalletId;
   public readonly label: ValueAndUpdates<string | undefined>;
-  public readonly canSign: ValueAndUpdates<boolean>;
+  public readonly canSign = new ValueAndUpdates(new DefaultValueProducer(true));
   public readonly implementationId = IovLedgerWallet.implementationId;
-  public readonly deviceState: ValueAndUpdates<LedgerState>;
 
   // wallet
-  private readonly deviceTracker = new StateTracker();
   private readonly labelProducer: DefaultValueProducer<string | undefined>;
-  private readonly canSignProducer: DefaultValueProducer<boolean>;
 
   // identities
   private readonly identities: Identity[];
   private readonly labels: Map<IdentityId, string | undefined>;
-  private readonly simpleAddressIndices: Map<IdentityId, number>;
+  private readonly accountIndices: Map<IdentityId, number>;
 
   constructor(data?: WalletSerializationString) {
-    this.canSignProducer = new DefaultValueProducer(false);
-    this.canSign = new ValueAndUpdates(this.canSignProducer);
-
-    this.deviceTracker.state.updates.subscribe({
-      next: (value: LedgerState) => {
-        this.canSignProducer.update(value === LedgerState.IovAppOpen);
-      },
-    });
-    this.deviceState = this.deviceTracker.state;
-
     let id: WalletId;
     let label: string | undefined;
     const identities: Identity[] = [];
-    const simpleAddressIndices = new Map<IdentityId, number>();
+    const accountIndices = new Map<IdentityId, number>();
     const labels = new Map<IdentityId, string | undefined>();
 
     if (data) {
@@ -177,7 +165,7 @@ export class IovLedgerWallet implements Wallet {
           Encoding.fromHex(record.localIdentity.pubkey.data) as PubkeyBytes,
         );
         identities.push(identity);
-        simpleAddressIndices.set(IovLedgerWallet.identityId(identity), record.simpleAddressIndex);
+        accountIndices.set(IovLedgerWallet.identityId(identity), record.accountIndex);
         labels.set(IovLedgerWallet.identityId(identity), record.localIdentity.label);
       }
     } else {
@@ -188,29 +176,8 @@ export class IovLedgerWallet implements Wallet {
     this.labelProducer = new DefaultValueProducer<string | undefined>(label);
     this.label = new ValueAndUpdates(this.labelProducer);
     this.identities = identities;
-    this.simpleAddressIndices = simpleAddressIndices;
+    this.accountIndices = accountIndices;
     this.labels = labels;
-  }
-
-  /**
-   * Turn on tracking USB devices.
-   *
-   * This is must be called before every hardware interaction,
-   * i.e. createIdentity() and createTransactionSignature() and to
-   * use the canSign and deviceState properties.
-   */
-  public startDeviceTracking(): void {
-    this.deviceTracker.start();
-  }
-
-  /**
-   * Turn off tracking USB devices.
-   *
-   * Use this to save resources when IovLedgerWallet is not used anymore.
-   * With device tracking turned off, canSign and deviceState are not updated anymore.
-   */
-  public stopDeviceTracking(): void {
-    this.deviceTracker.stop();
   }
 
   public setLabel(label: string | undefined): void {
@@ -232,7 +199,7 @@ export class IovLedgerWallet implements Wallet {
     }
 
     this.identities.push(newIdentity);
-    this.simpleAddressIndices.set(newIdentityId, index);
+    this.accountIndices.set(newIdentityId, index);
     this.labels.set(newIdentityId, undefined);
 
     return newIdentity;
@@ -272,17 +239,15 @@ export class IovLedgerWallet implements Wallet {
       throw new Error("Only prehash type sha512 is supported on the Ledger");
     }
 
-    if (!this.deviceTracker.running) {
-      throw new Error("Device tracking off. Did you call startDeviceTracking()?");
-    }
+    const accountIndex = this.getAccountIndex(identity);
+    const transport = await Communication.createTransport();
+    const app = new LedgerApp(transport);
+    const signatureResponse = await app.sign(accountIndex, transactionBytes);
+    await transport.close();
 
-    await this.deviceState.waitFor(LedgerState.IovAppOpen);
+    if (!isLedgerAppSignature(signatureResponse)) throw new Error(signatureResponse.errorMessage);
 
-    const simpleAddressIndex = this.simpleAddressIndex(identity);
-    const transport = await connectToFirstLedger();
-
-    const signature = await signTransactionWithIndex(transport, transactionBytes, simpleAddressIndex);
-    return signature as SignatureBytes;
+    return signatureResponse.signature as SignatureBytes;
   }
 
   public printableSecret(): string {
@@ -295,7 +260,7 @@ export class IovLedgerWallet implements Wallet {
       label: this.label.value,
       id: this.id,
       identities: this.identities.map(identity => {
-        const simpleAddressIndex = this.simpleAddressIndex(identity);
+        const accountIndex = this.getAccountIndex(identity);
         const label = this.getIdentityLabel(identity);
         return {
           localIdentity: {
@@ -306,7 +271,7 @@ export class IovLedgerWallet implements Wallet {
             },
             label: label,
           },
-          simpleAddressIndex: simpleAddressIndex,
+          accountIndex: accountIndex,
         };
       }),
     };
@@ -326,22 +291,20 @@ export class IovLedgerWallet implements Wallet {
     }
     const index = options;
 
-    if (!this.deviceTracker.running) {
-      throw new Error("Device tracking off. Did you call startDeviceTracking()?");
-    }
+    const transport = await Communication.createTransport();
+    const app = new LedgerApp(transport);
+    const addressResponse = await app.getAddress(index);
+    await transport.close();
 
-    await this.deviceState.waitFor(LedgerState.IovAppOpen);
+    if (!isLedgerAppAddress(addressResponse)) throw new Error(addressResponse.errorMessage);
 
-    const transport = await connectToFirstLedger();
-    const pubkey = await getPublicKeyWithIndex(transport, index);
-
-    return IovLedgerWallet.buildIdentity(chainId, pubkey as PubkeyBytes);
+    return IovLedgerWallet.buildIdentity(chainId, addressResponse.pubkey as PubkeyBytes);
   }
 
   // This throws an exception when address index is missing
-  private simpleAddressIndex(identity: Identity): number {
+  private getAccountIndex(identity: Identity): number {
     const identityId = IovLedgerWallet.identityId(identity);
-    const out = this.simpleAddressIndices.get(identityId);
+    const out = this.accountIndices.get(identityId);
     if (out === undefined) {
       throw new Error("No address index found for identity '" + identityId + "'");
     }

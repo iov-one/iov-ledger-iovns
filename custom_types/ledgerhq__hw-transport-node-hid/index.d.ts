@@ -1,4 +1,5 @@
 declare module "@ledgerhq/hw-transport-node-hid" {
+  import { Transport } from "@ledgerhq/hw-transport";
   import { Device, HID } from "node-hid";
 
   /**
@@ -24,7 +25,7 @@ declare module "@ledgerhq/hw-transport-node-hid" {
     readonly complete: () => void,
   }
 
-  class TransportNodeHid {
+  class TransportNodeHid extends Transport {
     static listen(observer: Observer<DescriptorEvent<string>>): Subscription;
     static open(path: string): Promise<TransportNodeHid>;
 

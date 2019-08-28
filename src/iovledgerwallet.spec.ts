@@ -15,12 +15,11 @@ import { WalletId, WalletSerializationString } from "@iov/keycontrol";
 
 import { pendingWithoutInteractiveLedger, pendingWithoutLedger } from "./common.spec";
 import { IovLedgerWallet } from "./iovledgerwallet";
-import { LedgerState } from "./statetracker";
 
 const { toHex } = Encoding;
 
 describe("IovLedgerWallet", () => {
-  const defaultChain = "chain123" as ChainId;
+  const defaultChain = "local-dummy-chain" as ChainId;
 
   it("can be constructed", () => {
     const wallet = new IovLedgerWallet();
@@ -61,19 +60,18 @@ describe("IovLedgerWallet", () => {
     pendingWithoutLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
+
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
     expect(newIdentity).toBeTruthy();
     expect(newIdentity.pubkey.algo).toEqual(Algorithm.Ed25519);
     expect(newIdentity.pubkey.data.length).toEqual(32);
-    wallet.stopDeviceTracking();
   });
 
   it("can load a newly created identity", async () => {
     pendingWithoutLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
+
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
 
     expect(wallet.getIdentities().length).toEqual(1);
@@ -81,14 +79,13 @@ describe("IovLedgerWallet", () => {
     const firstIdentity = wallet.getIdentities()[0];
     expect(newIdentity.pubkey.algo).toEqual(firstIdentity.pubkey.algo);
     expect(newIdentity.pubkey.data).toEqual(firstIdentity.pubkey.data);
-    wallet.stopDeviceTracking();
   });
 
   it("can create multiple identities", async () => {
     pendingWithoutLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
+
     const newIdentity1 = await wallet.createIdentity(defaultChain, 0);
     const newIdentity2 = await wallet.createIdentity(defaultChain, 1);
     const newIdentity3 = await wallet.createIdentity(defaultChain, 2);
@@ -110,14 +107,13 @@ describe("IovLedgerWallet", () => {
     const lastIdentity = wallet.getIdentities()[4];
     expect(newIdentity5.pubkey.algo).toEqual(lastIdentity.pubkey.algo);
     expect(newIdentity5.pubkey.data).toEqual(lastIdentity.pubkey.data);
-    wallet.stopDeviceTracking();
   });
 
   it("can create different identities with the same keypair", async () => {
     pendingWithoutLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
+
     await wallet.createIdentity("chain1" as ChainId, 0);
     await wallet.createIdentity("chain2" as ChainId, 0);
 
@@ -126,27 +122,25 @@ describe("IovLedgerWallet", () => {
     expect(identities[0].chainId).toEqual("chain1");
     expect(identities[1].chainId).toEqual("chain2");
     expect(identities[0].pubkey).toEqual(identities[1].pubkey);
-    wallet.stopDeviceTracking();
   });
 
   it("throws when adding the same identity index twice", async () => {
     pendingWithoutLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
+
     await wallet.createIdentity(defaultChain, 0);
     await wallet
       .createIdentity(defaultChain, 0)
       .then(() => fail("must not resolve"))
       .catch(error => expect(error).toMatch(/Identity Index collision/i));
-    wallet.stopDeviceTracking();
   });
 
   it("can set, change and unset an identity label", async () => {
     pendingWithoutLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
+
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
     expect(wallet.getIdentityLabel(newIdentity)).toBeUndefined();
 
@@ -158,71 +152,13 @@ describe("IovLedgerWallet", () => {
 
     wallet.setIdentityLabel(newIdentity, undefined);
     expect(wallet.getIdentityLabel(newIdentity)).toBeUndefined();
-    wallet.stopDeviceTracking();
-  });
-
-  it("has disconnected device state when created", () => {
-    pendingWithoutInteractiveLedger();
-
-    const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
-    expect(wallet.deviceState.value).toEqual(LedgerState.Disconnected);
-    wallet.stopDeviceTracking();
-  });
-
-  it("changed device state to app open after some time", async () => {
-    pendingWithoutInteractiveLedger();
-
-    const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
-    expect(wallet.deviceState.value).toEqual(LedgerState.Disconnected);
-
-    await wallet.deviceState.waitFor(LedgerState.IovAppOpen);
-    expect(wallet.deviceState.value).toEqual(LedgerState.IovAppOpen);
-    wallet.stopDeviceTracking();
-  });
-
-  it("cannot sign when created", () => {
-    pendingWithoutInteractiveLedger();
-
-    const wallet = new IovLedgerWallet();
-    expect(wallet.canSign.value).toEqual(false);
-  });
-
-  it("can sign after some time", async () => {
-    pendingWithoutInteractiveLedger();
-
-    const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
-    expect(wallet.canSign.value).toEqual(false);
-
-    await wallet.canSign.waitFor(true);
-    expect(wallet.canSign.value).toEqual(true);
-    wallet.stopDeviceTracking();
-  });
-
-  it("cannot sign when device tracking is off", async () => {
-    pendingWithoutInteractiveLedger();
-
-    const wallet = new IovLedgerWallet();
-    expect(wallet.canSign.value).toEqual(false);
-
-    wallet.startDeviceTracking();
-    await wallet.canSign.waitFor(true);
-    expect(wallet.canSign.value).toEqual(true);
-
-    wallet.stopDeviceTracking();
-    expect(wallet.canSign.value).toEqual(false);
   });
 
   it("can sign", async () => {
     pendingWithoutInteractiveLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
     const newIdentity = await wallet.createIdentity(defaultChain, 0);
-
-    await wallet.canSign.waitFor(true);
 
     const tx: SendTransaction & WithCreator = {
       kind: "bcp/send",
@@ -253,9 +189,7 @@ describe("IovLedgerWallet", () => {
       default:
         fail("Unexpected prehash type");
     }
-
-    wallet.stopDeviceTracking();
-  });
+  }, 60_000);
 
   it("throws when trying to export the secret", () => {
     const wallet = new IovLedgerWallet();
@@ -268,7 +202,7 @@ describe("IovLedgerWallet", () => {
     pendingWithoutLedger();
 
     const wallet = new IovLedgerWallet();
-    wallet.startDeviceTracking();
+
     wallet.setLabel("wallet with 3 identities");
     const identity1 = await wallet.createIdentity(defaultChain, 0);
     const identity2 = await wallet.createIdentity(defaultChain, 1);
@@ -291,17 +225,17 @@ describe("IovLedgerWallet", () => {
     expect(decodedJson.identities[0].localIdentity.pubkey.algo).toEqual("ed25519");
     expect(decodedJson.identities[0].localIdentity.pubkey.data).toMatch(/^[0-9a-f]{64}$/);
     expect(decodedJson.identities[0].localIdentity.label).toBeUndefined();
-    expect(decodedJson.identities[0].simpleAddressIndex).toEqual(0);
+    expect(decodedJson.identities[0].accountIndex).toEqual(0);
     expect(decodedJson.identities[1].localIdentity).toBeTruthy();
     expect(decodedJson.identities[1].localIdentity.pubkey.algo).toEqual("ed25519");
     expect(decodedJson.identities[1].localIdentity.pubkey.data).toMatch(/^[0-9a-f]{64}$/);
     expect(decodedJson.identities[1].localIdentity.label).toEqual("");
-    expect(decodedJson.identities[1].simpleAddressIndex).toEqual(1);
+    expect(decodedJson.identities[1].accountIndex).toEqual(1);
     expect(decodedJson.identities[2].localIdentity).toBeTruthy();
     expect(decodedJson.identities[2].localIdentity.pubkey.algo).toEqual("ed25519");
     expect(decodedJson.identities[2].localIdentity.pubkey.data).toMatch(/^[0-9a-f]{64}$/);
     expect(decodedJson.identities[2].localIdentity.label).toEqual("foo");
-    expect(decodedJson.identities[2].simpleAddressIndex).toEqual(2);
+    expect(decodedJson.identities[2].accountIndex).toEqual(2);
 
     // keys are different
     expect(decodedJson.identities[0].localIdentity.pubkey.data).not.toEqual(
@@ -313,7 +247,6 @@ describe("IovLedgerWallet", () => {
     expect(decodedJson.identities[2].localIdentity.pubkey.data).not.toEqual(
       decodedJson.identities[0].localIdentity.pubkey.data,
     );
-    wallet.stopDeviceTracking();
   });
 
   it("can deserialize", () => {
@@ -344,7 +277,7 @@ describe("IovLedgerWallet", () => {
                 "pubkey": { "algo": "ed25519", "data": "aabbccdd" },
                 "label": "foo"
               },
-              "simpleAddressIndex": 7
+              "accountIndex": 7
             }
           ]
         }` as WalletSerializationString;
@@ -372,7 +305,7 @@ describe("IovLedgerWallet", () => {
                 "pubkey": { "algo": "ed25519", "data": "aabbccdd" },
                 "label": "foo"
               },
-              "simpleAddressIndex": 7
+              "accountIndex": 7
             },
             {
               "localIdentity": {
@@ -380,7 +313,7 @@ describe("IovLedgerWallet", () => {
                 "pubkey": { "algo": "ed25519", "data": "ddccbbaa" },
                 "label": "bar"
               },
-              "simpleAddressIndex": 23
+              "accountIndex": 23
             }
           ]
         }` as WalletSerializationString;
@@ -410,11 +343,9 @@ describe("IovLedgerWallet", () => {
     pendingWithoutLedger();
 
     const original = new IovLedgerWallet();
-    original.startDeviceTracking();
     const identity1 = await original.createIdentity(defaultChain, 0);
     const identity2 = await original.createIdentity(defaultChain, 1);
     const identity3 = await original.createIdentity(defaultChain, 2);
-    original.stopDeviceTracking();
     original.setIdentityLabel(identity1, undefined);
     original.setIdentityLabel(identity2, "");
     original.setIdentityLabel(identity3, "foo");
@@ -424,7 +355,7 @@ describe("IovLedgerWallet", () => {
     // pubkeys and labels match
     expect(original.getIdentities()).toEqual(restored.getIdentities());
 
-    // simpleAddressIndices are not exposed and cannot be compared
+    // accountIndices are not exposed and cannot be compared
     // without interactively creating Ledger signatures.
   });
 
@@ -440,7 +371,7 @@ describe("IovLedgerWallet", () => {
               "pubkey": { "algo": "ed25519", "data": "aabbccdd" },
               "label": "foo"
             },
-            "simpleAddressIndex": 7
+            "accountIndex": 7
           }
         ]
       }` as WalletSerializationString;

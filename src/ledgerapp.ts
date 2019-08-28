@@ -137,11 +137,6 @@ export class LedgerApp {
   }
 
   private static processErrorResponse(response: unknown): LedgerAppErrorState {
-    // TODO: why does this case occur?
-    if (response instanceof Error) {
-      throw response;
-    }
-
     if (typeof response !== "object" || response === null) {
       throw new Error(`Expected non-null object but got: ${typeof response}`);
     }
@@ -212,7 +207,7 @@ export class LedgerApp {
 
   public async sign(
     addressIndex: number,
-    message: Buffer,
+    message: Uint8Array,
   ): Promise<LedgerAppSignature | LedgerAppErrorState> {
     const chunks = LedgerApp.signGetChunks(addressIndex, message);
     return this.signSendChunk(1, chunks.length, chunks[0]).then(async result => {
@@ -225,15 +220,7 @@ export class LedgerApp {
         }
       }
 
-      if (!isLedgerAppSignature(latestResult)) {
-        throw new Error("Signing all chunks suceeded but the result does not have a signature");
-      }
-
-      return {
-        signature: new Uint8Array([...latestResult.signature]),
-        returnCode: latestResult.returnCode,
-        errorMessage: latestResult.errorMessage,
-      };
+      return latestResult;
     }, LedgerApp.processErrorResponse);
   }
 
@@ -245,16 +232,18 @@ export class LedgerApp {
     return this.transport
       .send(CLA, INS.SIGN_ED25519, chunkIdx, chunkNum, chunk, [0x9000, 0x6a80])
       .then(response => {
+        if (response.length < 2) {
+          throw new Error("Response too short to cut status code");
+        }
+
         const errorCodeData = response.slice(-2);
         const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
         let errorMessage = errorCodeToString(returnCode);
 
+        let signature = new Uint8Array();
         if (returnCode === 0x6a80) {
           errorMessage = response.slice(0, response.length - 2).toString("ascii");
-        }
-
-        let signature = null;
-        if (response.length > 2) {
+        } else {
           signature = response.slice(0, response.length - 2);
         }
 

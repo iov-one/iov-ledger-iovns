@@ -1,9 +1,10 @@
+import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
 import { Transport } from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 
 import { pendingWithoutSeededLedger, skipSeededTests } from "./common.spec";
-import { isLedgerAppAddress, isLedgerAppVersion, LedgerApp } from "./ledgerapp";
+import { isLedgerAppAddress, isLedgerAppSignature, isLedgerAppVersion, LedgerApp } from "./ledgerapp";
 
 const { fromHex } = Encoding;
 
@@ -136,6 +137,75 @@ describe("LedgerApp", () => {
         expect(response2.address).toEqual("iov1lxry06n8l760mkthg7sgda48cne4t26l3h8htn");
         expect(response3.address).toEqual("iov10ur3vxhy00el95g5fqthe889z6lzqgr080c0nw");
         expect(response4.address).toEqual("iov12evzw2nds3qzfdrlnka5hx25azaarh3q2527ua");
+      }
+    });
+  });
+
+  describe("sign", () => {
+    it("can sign for testnet", async () => {
+      pendingWithoutSeededLedger();
+
+      const txBlobStr =
+        "00cafe000b696f762d6c6f76656e657400000000000000009a03380a020801121473" +
+        "f16e71d0878f6ad26531e174452aec9161e8d41a1400000000000000000000000000000000000000" +
+        "0022061a0443415348";
+      const txBlob = fromHex(txBlobStr);
+
+      const app = new LedgerApp(transport!);
+      const version = await app.getVersion();
+      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+
+      const accountIndex = 0;
+
+      const responseAddr = await app.getAddress(accountIndex);
+      if (!isLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
+
+      const responseSign = await app.sign(accountIndex, txBlob);
+
+      if (version.testMode) {
+        if (!isLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
+
+        // Check signature is valid
+        const prehash = new Sha512(txBlob).digest();
+        const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+        expect(valid).toEqual(true);
+      } else {
+        expect(responseSign.returnCode).toEqual(0x6984);
+        expect(responseSign.errorMessage).toEqual("Data is invalid");
+      }
+    });
+
+    it("can sign for mainnet", async () => {
+      pendingWithoutSeededLedger();
+
+      const txBlobStr =
+        "00cafe000b696f762d6d61696e6e6574001fffffffffffff0a231214bad055e2cb" +
+        "cffc633e7dc76dc1148d6e9a2debfd1a0b1080c2d72f1a04434153489a03560a0208011214bad0" +
+        "55e2cbcffc633e7dc76dc1148d6e9a2debfd1a14020daec62066ec82a5a1b40378d87457ed88e4fc" +
+        "220d0807108088debe011a03494f562a1574657874207769746820656d6f6a693a20f09f908e";
+      const txBlob = fromHex(txBlobStr);
+
+      const app = new LedgerApp(transport!);
+      const version = await app.getVersion();
+      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+
+      const accountIndex = 0;
+
+      const responseAddr = await app.getAddress(accountIndex);
+      if (!isLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
+
+      const responseSign = await app.sign(accountIndex, txBlob);
+
+      if (version.testMode) {
+        expect(responseSign.returnCode).toEqual(0x6984);
+        expect(responseSign.errorMessage).toEqual("Data is invalid");
+      } else {
+        if (!isLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
+
+        // Check signature is valid
+        const prehash = new Sha512(txBlob).digest();
+        const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+        expect(valid).toEqual(true);
       }
     });
   });

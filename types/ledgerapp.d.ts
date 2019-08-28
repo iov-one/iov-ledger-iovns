@@ -30,6 +30,6 @@ export declare class LedgerApp {
     constructor(transport: Transport);
     getVersion(): Promise<LedgerAppVersion | LedgerAppErrorState>;
     getAddress(addressIndex: number, requireConfirmation?: boolean): Promise<LedgerAppAddress | LedgerAppErrorState>;
-    sign(addressIndex: number, message: Buffer): Promise<LedgerAppSignature | LedgerAppErrorState>;
+    sign(addressIndex: number, message: Uint8Array): Promise<LedgerAppSignature | LedgerAppErrorState>;
     private signSendChunk;
 }

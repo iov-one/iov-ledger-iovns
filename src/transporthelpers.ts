@@ -1,4 +1,4 @@
-import { Transport } from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 
 function environmentIsNodeJs(): boolean {
   return (

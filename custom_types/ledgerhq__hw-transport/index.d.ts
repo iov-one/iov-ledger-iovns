@@ -14,4 +14,6 @@ declare module "@ledgerhq/hw-transport" {
       statusList?: number[],
     ): Promise<Buffer>;
   }
+
+  export default Transport;
 }

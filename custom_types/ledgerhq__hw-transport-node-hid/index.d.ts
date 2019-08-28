@@ -1,5 +1,5 @@
 declare module "@ledgerhq/hw-transport-node-hid" {
-  import { Transport } from "@ledgerhq/hw-transport";
+  import Transport from "@ledgerhq/hw-transport";
   import { Device, HID } from "node-hid";
 
   /**

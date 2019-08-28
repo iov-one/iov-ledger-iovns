@@ -1,6 +1,6 @@
 /// <reference types="node" />
 /// <reference types="ledgerhq__hw-transport" />
-import { Transport } from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 export interface LedgerAppErrorState {
     readonly returnCode: number;
     readonly errorMessage: string;

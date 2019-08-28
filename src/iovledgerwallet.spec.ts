@@ -225,17 +225,17 @@ describe("IovLedgerWallet", () => {
     expect(decodedJson.identities[0].localIdentity.pubkey.algo).toEqual("ed25519");
     expect(decodedJson.identities[0].localIdentity.pubkey.data).toMatch(/^[0-9a-f]{64}$/);
     expect(decodedJson.identities[0].localIdentity.label).toBeUndefined();
-    expect(decodedJson.identities[0].simpleAddressIndex).toEqual(0);
+    expect(decodedJson.identities[0].accountIndex).toEqual(0);
     expect(decodedJson.identities[1].localIdentity).toBeTruthy();
     expect(decodedJson.identities[1].localIdentity.pubkey.algo).toEqual("ed25519");
     expect(decodedJson.identities[1].localIdentity.pubkey.data).toMatch(/^[0-9a-f]{64}$/);
     expect(decodedJson.identities[1].localIdentity.label).toEqual("");
-    expect(decodedJson.identities[1].simpleAddressIndex).toEqual(1);
+    expect(decodedJson.identities[1].accountIndex).toEqual(1);
     expect(decodedJson.identities[2].localIdentity).toBeTruthy();
     expect(decodedJson.identities[2].localIdentity.pubkey.algo).toEqual("ed25519");
     expect(decodedJson.identities[2].localIdentity.pubkey.data).toMatch(/^[0-9a-f]{64}$/);
     expect(decodedJson.identities[2].localIdentity.label).toEqual("foo");
-    expect(decodedJson.identities[2].simpleAddressIndex).toEqual(2);
+    expect(decodedJson.identities[2].accountIndex).toEqual(2);
 
     // keys are different
     expect(decodedJson.identities[0].localIdentity.pubkey.data).not.toEqual(
@@ -277,7 +277,7 @@ describe("IovLedgerWallet", () => {
                 "pubkey": { "algo": "ed25519", "data": "aabbccdd" },
                 "label": "foo"
               },
-              "simpleAddressIndex": 7
+              "accountIndex": 7
             }
           ]
         }` as WalletSerializationString;
@@ -305,7 +305,7 @@ describe("IovLedgerWallet", () => {
                 "pubkey": { "algo": "ed25519", "data": "aabbccdd" },
                 "label": "foo"
               },
-              "simpleAddressIndex": 7
+              "accountIndex": 7
             },
             {
               "localIdentity": {
@@ -313,7 +313,7 @@ describe("IovLedgerWallet", () => {
                 "pubkey": { "algo": "ed25519", "data": "ddccbbaa" },
                 "label": "bar"
               },
-              "simpleAddressIndex": 23
+              "accountIndex": 23
             }
           ]
         }` as WalletSerializationString;
@@ -355,7 +355,7 @@ describe("IovLedgerWallet", () => {
     // pubkeys and labels match
     expect(original.getIdentities()).toEqual(restored.getIdentities());
 
-    // simpleAddressIndices are not exposed and cannot be compared
+    // accountIndices are not exposed and cannot be compared
     // without interactively creating Ledger signatures.
   });
 
@@ -371,7 +371,7 @@ describe("IovLedgerWallet", () => {
               "pubkey": { "algo": "ed25519", "data": "aabbccdd" },
               "label": "foo"
             },
-            "simpleAddressIndex": 7
+            "accountIndex": 7
           }
         ]
       }` as WalletSerializationString;

@@ -39,7 +39,7 @@ interface LocalIdentitySerialization {
 
 interface IdentitySerialization {
   readonly localIdentity: LocalIdentitySerialization;
-  readonly simpleAddressIndex: number;
+  readonly accountIndex: number;
 }
 
 interface IovLedgerWalletSerialization {
@@ -146,7 +146,7 @@ export class IovLedgerWallet implements Wallet {
     let id: WalletId;
     let label: string | undefined;
     const identities: Identity[] = [];
-    const simpleAddressIndices = new Map<IdentityId, number>();
+    const accountIndices = new Map<IdentityId, number>();
     const labels = new Map<IdentityId, string | undefined>();
 
     if (data) {
@@ -165,7 +165,7 @@ export class IovLedgerWallet implements Wallet {
           Encoding.fromHex(record.localIdentity.pubkey.data) as PubkeyBytes,
         );
         identities.push(identity);
-        simpleAddressIndices.set(IovLedgerWallet.identityId(identity), record.simpleAddressIndex);
+        accountIndices.set(IovLedgerWallet.identityId(identity), record.accountIndex);
         labels.set(IovLedgerWallet.identityId(identity), record.localIdentity.label);
       }
     } else {
@@ -176,7 +176,7 @@ export class IovLedgerWallet implements Wallet {
     this.labelProducer = new DefaultValueProducer<string | undefined>(label);
     this.label = new ValueAndUpdates(this.labelProducer);
     this.identities = identities;
-    this.accountIndices = simpleAddressIndices;
+    this.accountIndices = accountIndices;
     this.labels = labels;
   }
 
@@ -260,7 +260,7 @@ export class IovLedgerWallet implements Wallet {
       label: this.label.value,
       id: this.id,
       identities: this.identities.map(identity => {
-        const simpleAddressIndex = this.getAccountIndex(identity);
+        const accountIndex = this.getAccountIndex(identity);
         const label = this.getIdentityLabel(identity);
         return {
           localIdentity: {
@@ -271,7 +271,7 @@ export class IovLedgerWallet implements Wallet {
             },
             label: label,
           },
-          simpleAddressIndex: simpleAddressIndex,
+          accountIndex: accountIndex,
         };
       }),
     };

@@ -3,6 +3,7 @@ declare module "@ledgerhq/hw-transport" {
   class Transport {
     static create(openTimeout?: number, listenTimeout?: number): Promise<Transport>;
 
+    close(): Promise<void>;
     decorateAppAPIMethods(self: any, methods: string[], scrambleKey: string): void;
     send(
       cla: number,

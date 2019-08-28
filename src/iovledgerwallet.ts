@@ -23,8 +23,8 @@ import { DefaultValueProducer, ValueAndUpdates } from "@iov/stream";
 import PseudoRandom from "random-js";
 import { As } from "type-tagger";
 
-import { Communication } from "./communication";
 import { isLedgerAppAddress, isLedgerAppSignature, LedgerApp } from "./ledgerapp";
+import { TransportHelpers } from "./transporthelpers";
 
 interface PubkeySerialization {
   readonly algo: string;
@@ -240,7 +240,7 @@ export class IovLedgerWallet implements Wallet {
     }
 
     const accountIndex = this.getAccountIndex(identity);
-    const transport = await Communication.createTransport();
+    const transport = await TransportHelpers.createTransport();
     const app = new LedgerApp(transport);
     const signatureResponse = await app.sign(accountIndex, transactionBytes);
     await transport.close();
@@ -291,7 +291,7 @@ export class IovLedgerWallet implements Wallet {
     }
     const index = options;
 
-    const transport = await Communication.createTransport();
+    const transport = await TransportHelpers.createTransport();
     const app = new LedgerApp(transport);
     const addressResponse = await app.getAddress(index);
     await transport.close();

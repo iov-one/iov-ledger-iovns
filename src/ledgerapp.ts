@@ -14,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-import { Transport } from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 
 const CLA = 0x22;
 const CHUNK_SIZE = 250;

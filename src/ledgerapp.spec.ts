@@ -2,7 +2,7 @@ import "babel-polyfill";
 
 import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
-import { Transport } from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 
 import { pendingWithoutInteractiveLedger, pendingWithoutSeededLedger, skipSeededTests } from "./common.spec";

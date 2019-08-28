@@ -20,7 +20,7 @@ const CLA = 0x22;
 const CHUNK_SIZE = 250;
 const APP_KEY = "IOV";
 
-const IOV_COIN_TYPE = 0x800000ea;
+const IOV_COIN_TYPE = 234;
 
 const INS = {
   GET_VERSION: 0x00,
@@ -56,6 +56,11 @@ const ERROR_DESCRIPTION: { readonly [index: number]: string } = {
 function errorCodeToString(statusCode: number): string {
   if (statusCode in ERROR_DESCRIPTION) return ERROR_DESCRIPTION[statusCode];
   return `Unknown Status Code: ${statusCode}`;
+}
+
+function harden(index: number): number {
+  // Don't use bitwise operations, which result in signed int32 in JavaScript
+  return 0x80000000 + index;
 }
 
 export interface LedgerAppErrorState {
@@ -101,13 +106,14 @@ export function isLedgerAppSignature(
 }
 
 export class LedgerApp {
-  public static serializeBIP32(addressIndex: number): Buffer {
-    if (!Number.isInteger(addressIndex)) throw new Error("Input must be an integer");
+  public static serializeBIP32(accountIndex: number): Buffer {
+    if (!Number.isInteger(accountIndex)) throw new Error("Input must be an integer");
+    if (accountIndex < 0 || accountIndex > 2 ** 31 - 1) throw new Error("Index is out of range");
 
     const buf = Buffer.alloc(12);
-    buf.writeUInt32LE(0x8000002c, 0);
-    buf.writeUInt32LE(IOV_COIN_TYPE, 4);
-    buf.writeUInt32LE(addressIndex, 8);
+    buf.writeUInt32LE(harden(44), 0);
+    buf.writeUInt32LE(harden(IOV_COIN_TYPE), 4);
+    buf.writeUInt32LE(harden(accountIndex), 8);
     return buf;
   }
 

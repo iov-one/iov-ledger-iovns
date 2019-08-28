@@ -23,7 +23,7 @@ export interface LedgerAppSignature extends LedgerAppErrorState {
 }
 export declare function isLedgerAppSignature(data: LedgerAppSignature | LedgerAppErrorState): data is LedgerAppSignature;
 export declare class LedgerApp {
-    static serializeBIP32(addressIndex: number): Buffer;
+    static serializeBIP32(accountIndex: number): Buffer;
     static signGetChunks(addressIndex: number, message: Uint8Array): readonly Buffer[];
     private static processErrorResponse;
     private readonly transport;

@@ -7,12 +7,6 @@ import { isLedgerAppAddress, isLedgerAppVersion, LedgerApp } from "./ledgerapp";
 
 const { fromHex } = Encoding;
 
-function harden(index: number): number {
-  // Don't use bitwise operations, which result in signed int32 in JavaScript.
-  // Addition works well for small numbers.
-  return 0x80000000 + index;
-}
-
 describe("LedgerApp", () => {
   let transport: Transport | undefined;
 
@@ -30,15 +24,13 @@ describe("LedgerApp", () => {
 
     it("returns correct components", () => {
       // Encoding is 3x uint32 as little endian
-      expect(LedgerApp.serializeBIP32(0x80000000 + 0x00).toString("hex")).toEqual("2c000080ea00008000000080");
-      expect(LedgerApp.serializeBIP32(0x80000000 + 0x01).toString("hex")).toEqual("2c000080ea00008001000080");
-      expect(LedgerApp.serializeBIP32(0x80000000 + 0x02).toString("hex")).toEqual("2c000080ea00008002000080");
-      expect(LedgerApp.serializeBIP32(0x80000000 + 0x03).toString("hex")).toEqual("2c000080ea00008003000080");
-      expect(LedgerApp.serializeBIP32(0x80000000 + 0xff).toString("hex")).toEqual("2c000080ea000080ff000080");
-      expect(LedgerApp.serializeBIP32(0x80000000 + 0xffeedd).toString("hex")).toEqual(
-        "2c000080ea000080ddeeff80",
-      );
-      expect(LedgerApp.serializeBIP32(0xffffffff).toString("hex")).toEqual("2c000080ea000080ffffffff");
+      expect(LedgerApp.serializeBIP32(0x00).toString("hex")).toEqual("2c000080ea00008000000080");
+      expect(LedgerApp.serializeBIP32(0x01).toString("hex")).toEqual("2c000080ea00008001000080");
+      expect(LedgerApp.serializeBIP32(0x02).toString("hex")).toEqual("2c000080ea00008002000080");
+      expect(LedgerApp.serializeBIP32(0x03).toString("hex")).toEqual("2c000080ea00008003000080");
+      expect(LedgerApp.serializeBIP32(0xff).toString("hex")).toEqual("2c000080ea000080ff000080");
+      expect(LedgerApp.serializeBIP32(0xffeedd).toString("hex")).toEqual("2c000080ea000080ddeeff80");
+      expect(LedgerApp.serializeBIP32(2 ** 31 - 1).toString("hex")).toEqual("2c000080ea000080ffffffff");
     });
 
     it("throws for values out of range", () => {
@@ -49,7 +41,7 @@ describe("LedgerApp", () => {
       );
 
       expect(() => LedgerApp.serializeBIP32(-1)).toThrowError(/is out of range/);
-      expect(() => LedgerApp.serializeBIP32(0xffffffff + 1)).toThrowError(/is out of range/);
+      expect(() => LedgerApp.serializeBIP32(2 ** 31)).toThrowError(/is out of range/);
     });
   });
 
@@ -80,7 +72,7 @@ describe("LedgerApp", () => {
       const version = await app.getVersion();
       if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
 
-      const response = await app.getAddress(harden(5));
+      const response = await app.getAddress(5);
       if (!isLedgerAppAddress(response)) throw new Error(response.errorMessage);
 
       expect(response.pubkey).toEqual(
@@ -102,11 +94,11 @@ describe("LedgerApp", () => {
       const version = await app.getVersion();
       if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
 
-      const response0 = await app.getAddress(harden(0));
-      const response1 = await app.getAddress(harden(1));
-      const response2 = await app.getAddress(harden(2));
-      const response3 = await app.getAddress(harden(3));
-      const response4 = await app.getAddress(harden(4));
+      const response0 = await app.getAddress(0);
+      const response1 = await app.getAddress(1);
+      const response2 = await app.getAddress(2);
+      const response3 = await app.getAddress(3);
+      const response4 = await app.getAddress(4);
 
       if (!isLedgerAppAddress(response0)) throw new Error(response0.errorMessage);
       if (!isLedgerAppAddress(response1)) throw new Error(response1.errorMessage);

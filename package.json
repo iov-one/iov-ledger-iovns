@@ -29,9 +29,7 @@
     "test": "yarn build-or-skip && yarn test-node",
     "move-types": "shx rm -r ./types/* && shx mv build/types/* ./types && shx rm ./types/*.spec.d.ts",
     "build": "shx rm -rf ./build && tsc && yarn move-types",
-    "build-or-skip": "[ -n \"$SKIP_BUILD\" ] || yarn build",
-    "listen": "ts-node ./src/scripts/listen.ts | grep -v '^dev'",
-    "checkapp": "ts-node ./src/scripts/checkapp.ts | grep -v '^dev'"
+    "build-or-skip": "[ -n \"$SKIP_BUILD\" ] || yarn build"
   },
   "dependencies": {
     "@iov/bcp": "^0.17.0",
@@ -59,7 +57,6 @@
     "jasmine-spec-reporter": "^4.2.1",
     "prettier": "^1.18.2",
     "shx": "^0.3.2",
-    "ts-node": "^7.0.0",
     "tslint": "^5.18.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-immutable": "^5.1.0",

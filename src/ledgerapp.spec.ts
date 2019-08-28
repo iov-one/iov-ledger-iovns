@@ -3,7 +3,7 @@ import { Encoding } from "@iov/encoding";
 import { Transport } from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 
-import { pendingWithoutSeededLedger, skipSeededTests } from "./common.spec";
+import { pendingWithoutInteractiveLedger, pendingWithoutSeededLedger, skipSeededTests } from "./common.spec";
 import { isLedgerAppAddress, isLedgerAppSignature, isLedgerAppVersion, LedgerApp } from "./ledgerapp";
 
 const { fromHex } = Encoding;
@@ -144,6 +144,7 @@ describe("LedgerApp", () => {
   describe("sign", () => {
     it("can sign for testnet", async () => {
       pendingWithoutSeededLedger();
+      pendingWithoutInteractiveLedger();
 
       const txBlobStr =
         "00cafe000b696f762d6c6f76656e657400000000000000009a03380a020801121473" +
@@ -177,6 +178,7 @@ describe("LedgerApp", () => {
 
     it("can sign for mainnet", async () => {
       pendingWithoutSeededLedger();
+      pendingWithoutInteractiveLedger();
 
       const txBlobStr =
         "00cafe000b696f762d6d61696e6e6574001fffffffffffff0a231214bad055e2cb" +

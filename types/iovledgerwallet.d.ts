@@ -1,3 +1,4 @@
+import "babel-polyfill";
 import { ChainId, Identity, PrehashType, SignableBytes, SignatureBytes } from "@iov/bcp";
 import { Ed25519Keypair, Slip10RawIndex } from "@iov/crypto";
 import { Wallet, WalletId, WalletImplementationIdString, WalletSerializationString } from "@iov/keycontrol";

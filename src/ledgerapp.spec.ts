@@ -1,3 +1,5 @@
+import "babel-polyfill";
+
 import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
 import { Transport } from "@ledgerhq/hw-transport";

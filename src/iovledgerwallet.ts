@@ -1,4 +1,6 @@
 // tslint:disable:readonly-array
+import "babel-polyfill";
+
 import {
   Algorithm,
   ChainId,

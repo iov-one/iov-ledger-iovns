@@ -68,7 +68,7 @@ describe("LedgerApp", () => {
   });
 
   describe("getAddress", () => {
-    it("get address", async () => {
+    it("can get address", async () => {
       pendingWithoutSeededLedger();
 
       const app = new LedgerApp(transport!);
@@ -90,7 +90,7 @@ describe("LedgerApp", () => {
       }
     });
 
-    it("get multiple addresses", async () => {
+    it("can get multiple addresses", async () => {
       pendingWithoutSeededLedger();
 
       const app = new LedgerApp(transport!);
@@ -139,6 +139,29 @@ describe("LedgerApp", () => {
         expect(response2.address).toEqual("iov1lxry06n8l760mkthg7sgda48cne4t26l3h8htn");
         expect(response3.address).toEqual("iov10ur3vxhy00el95g5fqthe889z6lzqgr080c0nw");
         expect(response4.address).toEqual("iov12evzw2nds3qzfdrlnka5hx25azaarh3q2527ua");
+      }
+    });
+
+    it("can show and get address", async () => {
+      pendingWithoutSeededLedger();
+      pendingWithoutInteractiveLedger();
+
+      const app = new LedgerApp(transport!);
+      const version = await app.getVersion();
+      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+
+      const response = await app.getAddress(5, true);
+      if (!isLedgerAppAddress(response)) throw new Error(response.errorMessage);
+
+      expect(response.pubkey).toEqual(
+        fromHex("05173bf18e8bc4203176be82c89ca9519100fe2cf340cbad239750bd3e3ff668"),
+      );
+
+      // Depending on the app version, we can get mainnet or testnet addresses
+      if (version.testMode) {
+        expect(response.address).toEqual("tiov1k9rxcg8htk6wcq546p86ksgqhq8fza7hykl8mp");
+      } else {
+        expect(response.address).toEqual("iov1k9rxcg8htk6wcq546p86ksgqhq8fza7h2rkrms");
       }
     });
   });

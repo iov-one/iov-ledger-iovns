@@ -7,9 +7,7 @@ export interface LedgerAppErrorState {
 }
 export interface LedgerAppVersion extends LedgerAppErrorState {
     readonly testMode: boolean;
-    readonly major: number;
-    readonly minor: number;
-    readonly patch: number;
+    readonly version: string;
     readonly deviceLocked: boolean;
 }
 export declare function isLedgerAppVersion(data: LedgerAppVersion | LedgerAppErrorState): data is LedgerAppVersion;

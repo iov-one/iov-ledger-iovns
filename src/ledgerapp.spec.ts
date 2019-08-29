@@ -4,8 +4,14 @@ import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
 import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
+import * as semver from "semver";
 
-import { pendingWithoutInteractiveLedger, pendingWithoutSeededLedger, skipSeededTests } from "./common.spec";
+import {
+  pendingWithoutInteractiveLedger,
+  pendingWithoutLedger,
+  pendingWithoutSeededLedger,
+  skipTests,
+} from "./common.spec";
 import { isLedgerAppAddress, isLedgerAppSignature, isLedgerAppVersion, LedgerApp } from "./ledgerapp";
 
 const { fromHex } = Encoding;
@@ -14,7 +20,7 @@ describe("LedgerApp", () => {
   let transport: Transport | undefined;
 
   beforeAll(async () => {
-    if (!skipSeededTests()) {
+    if (!skipTests()) {
       transport = await TransportNodeHid.create(1000);
     }
   });
@@ -50,20 +56,19 @@ describe("LedgerApp", () => {
 
   describe("getVersion", () => {
     it("works", async () => {
-      pendingWithoutSeededLedger();
+      pendingWithoutLedger();
 
       const app = new LedgerApp(transport!);
-      const version = await app.getVersion();
-      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
-      expect(version).toEqual(
+      const response = await app.getVersion();
+      if (!isLedgerAppVersion(response)) throw new Error(response.errorMessage);
+      expect(response).toEqual(
         jasmine.objectContaining({
-          major: 0,
-          minor: 8,
-          patch: 0,
           deviceLocked: false,
           errorMessage: "No errors",
         }),
       );
+      expect(response.version).toMatch(/^[0-9]+\.[0-9]+\.[0-9]+$/);
+      expect(semver.satisfies(response.version, "^0.8.0 || ^0.9.0")).toEqual(true);
     });
   });
 

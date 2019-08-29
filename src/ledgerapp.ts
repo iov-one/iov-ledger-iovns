@@ -70,18 +70,14 @@ export interface LedgerAppErrorState {
 
 export interface LedgerAppVersion extends LedgerAppErrorState {
   readonly testMode: boolean;
-  readonly major: number;
-  readonly minor: number;
-  readonly patch: number;
+  readonly version: string;
   readonly deviceLocked: boolean;
 }
 
 export function isLedgerAppVersion(data: LedgerAppVersion | LedgerAppErrorState): data is LedgerAppVersion {
   return (
     typeof (data as LedgerAppVersion).testMode !== "undefined" &&
-    typeof (data as LedgerAppVersion).major !== "undefined" &&
-    typeof (data as LedgerAppVersion).minor !== "undefined" &&
-    typeof (data as LedgerAppVersion).patch !== "undefined" &&
+    typeof (data as LedgerAppVersion).version === "string" &&
     typeof (data as LedgerAppVersion).deviceLocked !== "undefined"
   );
 }
@@ -171,15 +167,14 @@ export class LedgerApp {
       const errorCodeData = response.slice(-2);
       const errorCode = errorCodeData[0] * 256 + errorCodeData[1];
 
-      return {
+      const success: LedgerAppVersion = {
         testMode: response[0] !== 0,
-        major: response[1],
-        minor: response[2],
-        patch: response[3],
+        version: `${response[1]}.${response[2]}.${response[3]}`,
         deviceLocked: response[4] === 1,
         returnCode: errorCode,
         errorMessage: errorCodeToString(errorCode),
       };
+      return success;
     }, LedgerApp.processErrorResponse);
   }
 

@@ -5,7 +5,12 @@ import { Encoding } from "@iov/encoding";
 import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 
-import { pendingWithoutInteractiveLedger, pendingWithoutSeededLedger, skipSeededTests } from "./common.spec";
+import {
+  pendingWithoutInteractiveLedger,
+  pendingWithoutLedger,
+  pendingWithoutSeededLedger,
+  skipTests,
+} from "./common.spec";
 import { isLedgerAppAddress, isLedgerAppSignature, isLedgerAppVersion, LedgerApp } from "./ledgerapp";
 
 const { fromHex } = Encoding;
@@ -14,7 +19,7 @@ describe("LedgerApp", () => {
   let transport: Transport | undefined;
 
   beforeAll(async () => {
-    if (!skipSeededTests()) {
+    if (!skipTests()) {
       transport = await TransportNodeHid.create(1000);
     }
   });
@@ -50,7 +55,7 @@ describe("LedgerApp", () => {
 
   describe("getVersion", () => {
     it("works", async () => {
-      pendingWithoutSeededLedger();
+      pendingWithoutLedger();
 
       const app = new LedgerApp(transport!);
       const version = await app.getVersion();

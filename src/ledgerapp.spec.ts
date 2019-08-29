@@ -4,6 +4,7 @@ import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";
 import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
+import * as semver from "semver";
 
 import {
   pendingWithoutInteractiveLedger,
@@ -58,17 +59,16 @@ describe("LedgerApp", () => {
       pendingWithoutLedger();
 
       const app = new LedgerApp(transport!);
-      const version = await app.getVersion();
-      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
-      expect(version).toEqual(
+      const response = await app.getVersion();
+      if (!isLedgerAppVersion(response)) throw new Error(response.errorMessage);
+      expect(response).toEqual(
         jasmine.objectContaining({
-          major: 0,
-          minor: 8,
-          patch: 0,
           deviceLocked: false,
           errorMessage: "No errors",
         }),
       );
+      expect(response.version).toMatch(/^[0-9]+\.[0-9]+\.[0-9]+$/);
+      expect(semver.satisfies(response.version, "^0.8.0 || ^0.9.0")).toEqual(true);
     });
   });
 

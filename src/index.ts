@@ -1,4 +1,3 @@
-export { IovLedgerWallet } from "./iovledgerwallet";
 export {
   LedgerApp as IovLedgerApp,
   LedgerAppErrorState,
@@ -9,4 +8,3 @@ export {
   LedgerAppSignature,
   isLedgerAppSignature,
 } from "./ledgerapp";
-export { TransportHelpers } from "./transporthelpers";

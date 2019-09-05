@@ -1,1 +1,1 @@
-export { LedgerApp as IovLedgerApp, LedgerAppErrorState, LedgerAppVersion, isLedgerAppVersion, LedgerAppAddress, isLedgerAppAddress, LedgerAppSignature, isLedgerAppSignature, } from "./ledgerapp";
+export { IovLedgerApp, IovLedgerAppErrorState, IovLedgerAppVersion, isIovLedgerAppVersion, IovLedgerAppAddress, isIovLedgerAppAddress, IovLedgerAppSignature, isIovLedgerAppSignature, } from "./ledgerapp";

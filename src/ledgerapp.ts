@@ -63,45 +63,49 @@ function harden(index: number): number {
   return 0x80000000 + index;
 }
 
-export interface LedgerAppErrorState {
+export interface IovLedgerAppErrorState {
   readonly returnCode: number;
   readonly errorMessage: string;
 }
 
-export interface LedgerAppVersion extends LedgerAppErrorState {
+export interface IovLedgerAppVersion extends IovLedgerAppErrorState {
   readonly testMode: boolean;
   readonly version: string;
   readonly deviceLocked: boolean;
 }
 
-export function isLedgerAppVersion(data: LedgerAppVersion | LedgerAppErrorState): data is LedgerAppVersion {
+export function isIovLedgerAppVersion(
+  data: IovLedgerAppVersion | IovLedgerAppErrorState,
+): data is IovLedgerAppVersion {
   return (
-    typeof (data as LedgerAppVersion).testMode !== "undefined" &&
-    typeof (data as LedgerAppVersion).version === "string" &&
-    typeof (data as LedgerAppVersion).deviceLocked !== "undefined"
+    typeof (data as IovLedgerAppVersion).testMode !== "undefined" &&
+    typeof (data as IovLedgerAppVersion).version === "string" &&
+    typeof (data as IovLedgerAppVersion).deviceLocked !== "undefined"
   );
 }
 
-export interface LedgerAppAddress extends LedgerAppErrorState {
+export interface IovLedgerAppAddress extends IovLedgerAppErrorState {
   readonly pubkey: Uint8Array;
   readonly address: string;
 }
 
-export function isLedgerAppAddress(data: LedgerAppAddress | LedgerAppErrorState): data is LedgerAppAddress {
-  return typeof (data as LedgerAppAddress).address !== "undefined";
+export function isIovLedgerAppAddress(
+  data: IovLedgerAppAddress | IovLedgerAppErrorState,
+): data is IovLedgerAppAddress {
+  return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }
 
-export interface LedgerAppSignature extends LedgerAppErrorState {
+export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
   readonly signature: Uint8Array;
 }
 
-export function isLedgerAppSignature(
-  data: LedgerAppSignature | LedgerAppErrorState,
-): data is LedgerAppSignature {
-  return typeof (data as LedgerAppSignature).signature !== "undefined";
+export function isIovLedgerAppSignature(
+  data: IovLedgerAppSignature | IovLedgerAppErrorState,
+): data is IovLedgerAppSignature {
+  return typeof (data as IovLedgerAppSignature).signature !== "undefined";
 }
 
-export class LedgerApp {
+export class IovLedgerApp {
   public static serializeBIP32(accountIndex: number): Buffer {
     if (!Number.isInteger(accountIndex)) throw new Error("Input must be an integer");
     if (accountIndex < 0 || accountIndex > 2 ** 31 - 1) throw new Error("Index is out of range");
@@ -116,7 +120,7 @@ export class LedgerApp {
   public static signGetChunks(addressIndex: number, message: Uint8Array): readonly Buffer[] {
     // tslint:disable-next-line: readonly-array
     const chunks = [];
-    const bip32Path = LedgerApp.serializeBIP32(addressIndex);
+    const bip32Path = IovLedgerApp.serializeBIP32(addressIndex);
     chunks.push(bip32Path);
 
     const buffer = Buffer.from(message);
@@ -132,7 +136,7 @@ export class LedgerApp {
     return chunks;
   }
 
-  private static processErrorResponse(response: unknown): LedgerAppErrorState {
+  private static processErrorResponse(response: unknown): IovLedgerAppErrorState {
     if (typeof response !== "object" || response === null) {
       throw new Error(`Expected non-null object but got: ${typeof response}`);
     }
@@ -160,14 +164,14 @@ export class LedgerApp {
     this.transport.decorateAppAPIMethods(this, ["getVersion", "getAddress", "sign"], APP_KEY);
   }
 
-  public async getVersion(): Promise<LedgerAppVersion | LedgerAppErrorState> {
+  public async getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState> {
     return this.transport.send(CLA, INS.GET_VERSION, 0, 0).then(response => {
       if (response.length < 6) throw new Error(`Response data too short: ${response}`);
 
       const errorCodeData = response.slice(-2);
       const errorCode = errorCodeData[0] * 256 + errorCodeData[1];
 
-      const success: LedgerAppVersion = {
+      const success: IovLedgerAppVersion = {
         testMode: response[0] !== 0,
         version: `${response[1]}.${response[2]}.${response[3]}`,
         deviceLocked: response[4] === 1,
@@ -175,14 +179,14 @@ export class LedgerApp {
         errorMessage: errorCodeToString(errorCode),
       };
       return success;
-    }, LedgerApp.processErrorResponse);
+    }, IovLedgerApp.processErrorResponse);
   }
 
   public async getAddress(
     addressIndex: number,
     requireConfirmation = false,
-  ): Promise<LedgerAppAddress | LedgerAppErrorState> {
-    const bip32Path = LedgerApp.serializeBIP32(addressIndex);
+  ): Promise<IovLedgerAppAddress | IovLedgerAppErrorState> {
+    const bip32Path = IovLedgerApp.serializeBIP32(addressIndex);
 
     let p1 = 0;
     if (requireConfirmation) p1 = 1;
@@ -190,21 +194,21 @@ export class LedgerApp {
     return this.transport.send(CLA, INS.GET_ADDR_ED25519, p1, 0, bip32Path).then(response => {
       const errorCodeData = response.slice(-2);
       const errorCode = errorCodeData[0] * 256 + errorCodeData[1];
-      const success: LedgerAppAddress = {
+      const success: IovLedgerAppAddress = {
         pubkey: new Uint8Array([...response.slice(0, 32)]),
         address: response.slice(32, response.length - 2).toString("ascii"),
         returnCode: errorCode,
         errorMessage: errorCodeToString(errorCode),
       };
       return success;
-    }, LedgerApp.processErrorResponse);
+    }, IovLedgerApp.processErrorResponse);
   }
 
   public async sign(
     addressIndex: number,
     message: Uint8Array,
-  ): Promise<LedgerAppSignature | LedgerAppErrorState> {
-    const chunks = LedgerApp.signGetChunks(addressIndex, message);
+  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
+    const chunks = IovLedgerApp.signGetChunks(addressIndex, message);
     return this.signSendChunk(1, chunks.length, chunks[0]).then(async result => {
       let latestResult = result;
       for (let i = 1; i < chunks.length; i += 1) {
@@ -216,14 +220,14 @@ export class LedgerApp {
       }
 
       return latestResult;
-    }, LedgerApp.processErrorResponse);
+    }, IovLedgerApp.processErrorResponse);
   }
 
   private async signSendChunk(
     chunkIdx: number,
     chunkNum: number,
     chunk: Buffer,
-  ): Promise<LedgerAppSignature | LedgerAppErrorState> {
+  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
     return this.transport
       .send(CLA, INS.SIGN_ED25519, chunkIdx, chunkNum, chunk, [0x9000, 0x6a80])
       .then(response => {
@@ -247,6 +251,6 @@ export class LedgerApp {
           returnCode: returnCode,
           errorMessage: errorMessage,
         };
-      }, LedgerApp.processErrorResponse);
+      }, IovLedgerApp.processErrorResponse);
   }
 }

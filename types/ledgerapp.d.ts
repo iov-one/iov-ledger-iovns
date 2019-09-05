@@ -1,33 +1,33 @@
 /// <reference types="node" />
 /// <reference types="ledgerhq__hw-transport" />
 import Transport from "@ledgerhq/hw-transport";
-export interface LedgerAppErrorState {
+export interface IovLedgerAppErrorState {
     readonly returnCode: number;
     readonly errorMessage: string;
 }
-export interface LedgerAppVersion extends LedgerAppErrorState {
+export interface IovLedgerAppVersion extends IovLedgerAppErrorState {
     readonly testMode: boolean;
     readonly version: string;
     readonly deviceLocked: boolean;
 }
-export declare function isLedgerAppVersion(data: LedgerAppVersion | LedgerAppErrorState): data is LedgerAppVersion;
-export interface LedgerAppAddress extends LedgerAppErrorState {
+export declare function isIovLedgerAppVersion(data: IovLedgerAppVersion | IovLedgerAppErrorState): data is IovLedgerAppVersion;
+export interface IovLedgerAppAddress extends IovLedgerAppErrorState {
     readonly pubkey: Uint8Array;
     readonly address: string;
 }
-export declare function isLedgerAppAddress(data: LedgerAppAddress | LedgerAppErrorState): data is LedgerAppAddress;
-export interface LedgerAppSignature extends LedgerAppErrorState {
+export declare function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppErrorState): data is IovLedgerAppAddress;
+export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
     readonly signature: Uint8Array;
 }
-export declare function isLedgerAppSignature(data: LedgerAppSignature | LedgerAppErrorState): data is LedgerAppSignature;
-export declare class LedgerApp {
+export declare function isIovLedgerAppSignature(data: IovLedgerAppSignature | IovLedgerAppErrorState): data is IovLedgerAppSignature;
+export declare class IovLedgerApp {
     static serializeBIP32(accountIndex: number): Buffer;
     static signGetChunks(addressIndex: number, message: Uint8Array): readonly Buffer[];
     private static processErrorResponse;
     private readonly transport;
     constructor(transport: Transport);
-    getVersion(): Promise<LedgerAppVersion | LedgerAppErrorState>;
-    getAddress(addressIndex: number, requireConfirmation?: boolean): Promise<LedgerAppAddress | LedgerAppErrorState>;
-    sign(addressIndex: number, message: Uint8Array): Promise<LedgerAppSignature | LedgerAppErrorState>;
+    getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState>;
+    getAddress(addressIndex: number, requireConfirmation?: boolean): Promise<IovLedgerAppAddress | IovLedgerAppErrorState>;
+    sign(addressIndex: number, message: Uint8Array): Promise<IovLedgerAppSignature | IovLedgerAppErrorState>;
     private signSendChunk;
 }

@@ -1,12 +1,10 @@
-export { IovLedgerWallet } from "./iovledgerwallet";
 export {
-  LedgerApp as IovLedgerApp,
-  LedgerAppErrorState,
-  LedgerAppVersion,
-  isLedgerAppVersion,
-  LedgerAppAddress,
-  isLedgerAppAddress,
-  LedgerAppSignature,
-  isLedgerAppSignature,
+  IovLedgerApp,
+  IovLedgerAppErrorState,
+  IovLedgerAppVersion,
+  isIovLedgerAppVersion,
+  IovLedgerAppAddress,
+  isIovLedgerAppAddress,
+  IovLedgerAppSignature,
+  isIovLedgerAppSignature,
 } from "./ledgerapp";
-export { TransportHelpers } from "./transporthelpers";

@@ -12,11 +12,16 @@ import {
   pendingWithoutSeededLedger,
   skipTests,
 } from "./common.spec";
-import { isLedgerAppAddress, isLedgerAppSignature, isLedgerAppVersion, LedgerApp } from "./ledgerapp";
+import {
+  IovLedgerApp,
+  isIovLedgerAppAddress,
+  isIovLedgerAppSignature,
+  isIovLedgerAppVersion,
+} from "./ledgerapp";
 
 const { fromHex } = Encoding;
 
-describe("LedgerApp", () => {
+describe("IovLedgerApp", () => {
   let transport: Transport | undefined;
 
   beforeAll(async () => {
@@ -27,30 +32,30 @@ describe("LedgerApp", () => {
 
   describe("serializeBIP32", () => {
     it("returns 3*4 bytes", () => {
-      const serialization = LedgerApp.serializeBIP32(0);
+      const serialization = IovLedgerApp.serializeBIP32(0);
       expect(serialization.length).toEqual(12);
     });
 
     it("returns correct components", () => {
       // Encoding is 3x uint32 as little endian
-      expect(LedgerApp.serializeBIP32(0x00).toString("hex")).toEqual("2c000080ea00008000000080");
-      expect(LedgerApp.serializeBIP32(0x01).toString("hex")).toEqual("2c000080ea00008001000080");
-      expect(LedgerApp.serializeBIP32(0x02).toString("hex")).toEqual("2c000080ea00008002000080");
-      expect(LedgerApp.serializeBIP32(0x03).toString("hex")).toEqual("2c000080ea00008003000080");
-      expect(LedgerApp.serializeBIP32(0xff).toString("hex")).toEqual("2c000080ea000080ff000080");
-      expect(LedgerApp.serializeBIP32(0xffeedd).toString("hex")).toEqual("2c000080ea000080ddeeff80");
-      expect(LedgerApp.serializeBIP32(2 ** 31 - 1).toString("hex")).toEqual("2c000080ea000080ffffffff");
+      expect(IovLedgerApp.serializeBIP32(0x00).toString("hex")).toEqual("2c000080ea00008000000080");
+      expect(IovLedgerApp.serializeBIP32(0x01).toString("hex")).toEqual("2c000080ea00008001000080");
+      expect(IovLedgerApp.serializeBIP32(0x02).toString("hex")).toEqual("2c000080ea00008002000080");
+      expect(IovLedgerApp.serializeBIP32(0x03).toString("hex")).toEqual("2c000080ea00008003000080");
+      expect(IovLedgerApp.serializeBIP32(0xff).toString("hex")).toEqual("2c000080ea000080ff000080");
+      expect(IovLedgerApp.serializeBIP32(0xffeedd).toString("hex")).toEqual("2c000080ea000080ddeeff80");
+      expect(IovLedgerApp.serializeBIP32(2 ** 31 - 1).toString("hex")).toEqual("2c000080ea000080ffffffff");
     });
 
     it("throws for values out of range", () => {
-      expect(() => LedgerApp.serializeBIP32(Number.NaN)).toThrowError(/Input must be an integer/);
-      expect(() => LedgerApp.serializeBIP32(1.5)).toThrowError(/Input must be an integer/);
-      expect(() => LedgerApp.serializeBIP32(Number.POSITIVE_INFINITY)).toThrowError(
+      expect(() => IovLedgerApp.serializeBIP32(Number.NaN)).toThrowError(/Input must be an integer/);
+      expect(() => IovLedgerApp.serializeBIP32(1.5)).toThrowError(/Input must be an integer/);
+      expect(() => IovLedgerApp.serializeBIP32(Number.POSITIVE_INFINITY)).toThrowError(
         /Input must be an integer/,
       );
 
-      expect(() => LedgerApp.serializeBIP32(-1)).toThrowError(/is out of range/);
-      expect(() => LedgerApp.serializeBIP32(2 ** 31)).toThrowError(/is out of range/);
+      expect(() => IovLedgerApp.serializeBIP32(-1)).toThrowError(/is out of range/);
+      expect(() => IovLedgerApp.serializeBIP32(2 ** 31)).toThrowError(/is out of range/);
     });
   });
 
@@ -58,9 +63,9 @@ describe("LedgerApp", () => {
     it("works", async () => {
       pendingWithoutLedger();
 
-      const app = new LedgerApp(transport!);
+      const app = new IovLedgerApp(transport!);
       const response = await app.getVersion();
-      if (!isLedgerAppVersion(response)) throw new Error(response.errorMessage);
+      if (!isIovLedgerAppVersion(response)) throw new Error(response.errorMessage);
       expect(response).toEqual(
         jasmine.objectContaining({
           deviceLocked: false,
@@ -76,12 +81,12 @@ describe("LedgerApp", () => {
     it("can get address", async () => {
       pendingWithoutSeededLedger();
 
-      const app = new LedgerApp(transport!);
+      const app = new IovLedgerApp(transport!);
       const version = await app.getVersion();
-      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
 
       const response = await app.getAddress(5);
-      if (!isLedgerAppAddress(response)) throw new Error(response.errorMessage);
+      if (!isIovLedgerAppAddress(response)) throw new Error(response.errorMessage);
 
       expect(response.pubkey).toEqual(
         fromHex("05173bf18e8bc4203176be82c89ca9519100fe2cf340cbad239750bd3e3ff668"),
@@ -98,9 +103,9 @@ describe("LedgerApp", () => {
     it("can get multiple addresses", async () => {
       pendingWithoutSeededLedger();
 
-      const app = new LedgerApp(transport!);
+      const app = new IovLedgerApp(transport!);
       const version = await app.getVersion();
-      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
 
       const response0 = await app.getAddress(0);
       const response1 = await app.getAddress(1);
@@ -108,11 +113,11 @@ describe("LedgerApp", () => {
       const response3 = await app.getAddress(3);
       const response4 = await app.getAddress(4);
 
-      if (!isLedgerAppAddress(response0)) throw new Error(response0.errorMessage);
-      if (!isLedgerAppAddress(response1)) throw new Error(response1.errorMessage);
-      if (!isLedgerAppAddress(response2)) throw new Error(response2.errorMessage);
-      if (!isLedgerAppAddress(response3)) throw new Error(response3.errorMessage);
-      if (!isLedgerAppAddress(response4)) throw new Error(response4.errorMessage);
+      if (!isIovLedgerAppAddress(response0)) throw new Error(response0.errorMessage);
+      if (!isIovLedgerAppAddress(response1)) throw new Error(response1.errorMessage);
+      if (!isIovLedgerAppAddress(response2)) throw new Error(response2.errorMessage);
+      if (!isIovLedgerAppAddress(response3)) throw new Error(response3.errorMessage);
+      if (!isIovLedgerAppAddress(response4)) throw new Error(response4.errorMessage);
 
       // Calculated using Token Finder tool with mnemonic
       // equip will roof matter pink blind book anxiety banner elbow sun young
@@ -151,12 +156,12 @@ describe("LedgerApp", () => {
       pendingWithoutSeededLedger();
       pendingWithoutInteractiveLedger();
 
-      const app = new LedgerApp(transport!);
+      const app = new IovLedgerApp(transport!);
       const version = await app.getVersion();
-      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
 
       const response = await app.getAddress(5, true);
-      if (!isLedgerAppAddress(response)) throw new Error(response.errorMessage);
+      if (!isIovLedgerAppAddress(response)) throw new Error(response.errorMessage);
 
       expect(response.pubkey).toEqual(
         fromHex("05173bf18e8bc4203176be82c89ca9519100fe2cf340cbad239750bd3e3ff668"),
@@ -182,19 +187,19 @@ describe("LedgerApp", () => {
         "0022061a0443415348";
       const txBlob = fromHex(txBlobStr);
 
-      const app = new LedgerApp(transport!);
+      const app = new IovLedgerApp(transport!);
       const version = await app.getVersion();
-      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
 
       const accountIndex = 0;
 
       const responseAddr = await app.getAddress(accountIndex);
-      if (!isLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
+      if (!isIovLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
 
       const responseSign = await app.sign(accountIndex, txBlob);
 
       if (version.testMode) {
-        if (!isLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
+        if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
         // Check signature is valid
         const prehash = new Sha512(txBlob).digest();
@@ -217,14 +222,14 @@ describe("LedgerApp", () => {
         "220d0807108088debe011a03494f562a1574657874207769746820656d6f6a693a20f09f908e";
       const txBlob = fromHex(txBlobStr);
 
-      const app = new LedgerApp(transport!);
+      const app = new IovLedgerApp(transport!);
       const version = await app.getVersion();
-      if (!isLedgerAppVersion(version)) throw new Error(version.errorMessage);
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
 
       const accountIndex = 0;
 
       const responseAddr = await app.getAddress(accountIndex);
-      if (!isLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
+      if (!isIovLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
 
       const responseSign = await app.sign(accountIndex, txBlob);
 
@@ -232,7 +237,7 @@ describe("LedgerApp", () => {
         expect(responseSign.returnCode).toEqual(0x6984);
         expect(responseSign.errorMessage).toEqual("Data is invalid");
       } else {
-        if (!isLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
+        if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
         // Check signature is valid
         const prehash = new Sha512(txBlob).digest();

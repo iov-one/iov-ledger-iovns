@@ -32,7 +32,9 @@
     "build": "shx rm -rf ./build && tsc && yarn move-types",
     "build-or-skip": "[ -n \"$SKIP_BUILD\" ] || yarn build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@types/ledgerhq__hw-transport": "^4.21.2"
+  },
   "devDependencies": {
     "@iov/crypto": "^0.17.0",
     "@iov/encoding": "^0.17.0",
@@ -42,7 +44,6 @@
     "@types/semver": "^6.0.1",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
-    "babel-polyfill": "^6.26.0",
     "eslint": "^6.1.0",
     "eslint-config-prettier": "^6.0.0",
     "eslint-plugin-prettier": "^3.1.0",
@@ -50,6 +51,7 @@
     "jasmine": "^3.3.1",
     "jasmine-spec-reporter": "^4.2.1",
     "prettier": "^1.18.2",
+    "regenerator-runtime": "^0.13.3",
     "semver": "^6.3.0",
     "shx": "^0.3.2",
     "source-map-support": "^0.5.13",

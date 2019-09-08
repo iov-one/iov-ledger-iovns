@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.14.1
+
+- Use `@ledgerhq/hw-transport` types from Definitely Typed
+- Add multisig tests (min app version for tests is now 0.10.0)
+
 ## 0.14.0
 
 Breaking changes:

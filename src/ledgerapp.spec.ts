@@ -1,4 +1,4 @@
-import "babel-polyfill";
+import "regenerator-runtime"; // required by @ledgerhq/hw-transport-node-hid
 
 import { Ed25519, Sha512 } from "@iov/crypto";
 import { Encoding } from "@iov/encoding";

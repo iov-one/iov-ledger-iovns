@@ -73,7 +73,7 @@ describe("IovLedgerApp", () => {
         }),
       );
       expect(response.version).toMatch(/^[0-9]+\.[0-9]+\.[0-9]+$/);
-      expect(semver.satisfies(response.version, "^0.8.0 || ^0.9.0")).toEqual(true);
+      expect(semver.satisfies(response.version, "^0.10.0")).toEqual(true);
     });
   });
 
@@ -181,11 +181,9 @@ describe("IovLedgerApp", () => {
       pendingWithoutSeededLedger();
       pendingWithoutInteractiveLedger();
 
-      const txBlobStr =
-        "00cafe000b696f762d6c6f76656e657400000000000000009a03380a020801121473" +
-        "f16e71d0878f6ad26531e174452aec9161e8d41a1400000000000000000000000000000000000000" +
-        "0022061a0443415348";
-      const txBlob = fromHex(txBlobStr);
+      const txBlob = fromHex(
+        "00cafe000b696f762d6c6f76656e657400000000000000009a03380a020801121473f16e71d0878f6ad26531e174452aec9161e8d41a14000000000000000000000000000000000000000022061a0443415348",
+      );
 
       const app = new IovLedgerApp(transport!);
       const version = await app.getVersion();
@@ -215,12 +213,9 @@ describe("IovLedgerApp", () => {
       pendingWithoutSeededLedger();
       pendingWithoutInteractiveLedger();
 
-      const txBlobStr =
-        "00cafe000b696f762d6d61696e6e6574001fffffffffffff0a231214bad055e2cb" +
-        "cffc633e7dc76dc1148d6e9a2debfd1a0b1080c2d72f1a04434153489a03560a0208011214bad0" +
-        "55e2cbcffc633e7dc76dc1148d6e9a2debfd1a14020daec62066ec82a5a1b40378d87457ed88e4fc" +
-        "220d0807108088debe011a03494f562a1574657874207769746820656d6f6a693a20f09f908e";
-      const txBlob = fromHex(txBlobStr);
+      const txBlob = fromHex(
+        "00cafe000b696f762d6d61696e6e6574001fffffffffffff0a231214bad055e2cbcffc633e7dc76dc1148d6e9a2debfd1a0b1080c2d72f1a04434153489a03560a0208011214bad055e2cbcffc633e7dc76dc1148d6e9a2debfd1a14020daec62066ec82a5a1b40378d87457ed88e4fc220d0807108088debe011a03494f562a1574657874207769746820656d6f6a693a20f09f908e",
+      );
 
       const app = new IovLedgerApp(transport!);
       const version = await app.getVersion();
@@ -245,5 +240,69 @@ describe("IovLedgerApp", () => {
         expect(valid).toEqual(true);
       }
     });
+
+    it("can sign multisig for testnet", async () => {
+      pendingWithoutSeededLedger();
+      pendingWithoutInteractiveLedger();
+
+      const txBlob = fromHex(
+        "00cafe000b696f762d6c6f76656e657400000000000000070a231214b9edb87a87c93f6997aee7f8b599cf60f6165fc81a0b1080c2d72f1a04434153482208000000000000002a9a03c2010a0208011214abababab111222111222111222ccccccccdddddd1a140000000000000000000000000000000000000000220d08081080d293ad031a03494f562a8001412076657279206c6f6e67206d656d6f206c6f72656d20697073756d206c6f72656d20697073756d2e20412076657279206c6f6e67206d656d6f206c6f72656d20697073756d206c6f72656d20697073756d2e20412076657279206c6f6e67206d656d6f206c6f72656d20697073756d206c6f72656d20697073756d21213131",
+      );
+
+      const app = new IovLedgerApp(transport!);
+      const version = await app.getVersion();
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
+
+      const accountIndex = 0;
+
+      const responseAddr = await app.getAddress(accountIndex);
+      if (!isIovLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
+
+      const responseSign = await app.sign(accountIndex, txBlob);
+
+      if (version.testMode) {
+        if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
+
+        // Check signature is valid
+        const prehash = new Sha512(txBlob).digest();
+        const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+        expect(valid).toEqual(true);
+      } else {
+        expect(responseSign.returnCode).toEqual(0x6984);
+        expect(responseSign.errorMessage).toEqual("Data is invalid");
+      }
+    }, 60_000);
+
+    it("can sign multisig for mainnet", async () => {
+      pendingWithoutSeededLedger();
+      pendingWithoutInteractiveLedger();
+
+      const txBlob = fromHex(
+        "00cafe000b696f762d6d61696e6e657400000000000000070a2312145ae2c58796b0ad48ffe7602eac3353488c859a2b1a0b1080c2d72f1a0443415348220800000000000000012208000000000000007b220800000000000001c722080000000000000b3d9a03c2010a02080112148787878787878787aaaaaaaaaaaaaaaa999999991a14020daec62066ec82a5a1b40378d87457ed88e4fc220d08081080d293ad031a03494f562a8001412076657279206c6f6e67206d656d6f206c6f72656d20697073756d206c6f72656d20697073756d2e20412076657279206c6f6e67206d656d6f206c6f72656d20697073756d206c6f72656d20697073756d2e20412076657279206c6f6e67206d656d6f206c6f72656d20697073756d206c6f72656d20697073756d21213131",
+      );
+
+      const app = new IovLedgerApp(transport!);
+      const version = await app.getVersion();
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
+
+      const accountIndex = 0;
+
+      const responseAddr = await app.getAddress(accountIndex);
+      if (!isIovLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
+
+      const responseSign = await app.sign(accountIndex, txBlob);
+
+      if (version.testMode) {
+        expect(responseSign.returnCode).toEqual(0x6984);
+        expect(responseSign.errorMessage).toEqual("Data is invalid");
+      } else {
+        if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
+
+        // Check signature is valid
+        const prehash = new Sha512(txBlob).digest();
+        const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+        expect(valid).toEqual(true);
+      }
+    }, 60_000);
   });
 });

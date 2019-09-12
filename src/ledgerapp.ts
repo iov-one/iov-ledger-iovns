@@ -243,7 +243,7 @@ export class IovLedgerApp {
         if (returnCode === 0x6a80) {
           errorMessage = response.slice(0, response.length - 2).toString("ascii");
         } else {
-          signature = response.slice(0, response.length - 2);
+          signature = Uint8Array.from(response.slice(0, response.length - 2));
         }
 
         return {

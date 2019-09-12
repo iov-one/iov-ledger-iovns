@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.2
+
+- Ensure signatures are Uint8Array not Buffers at runtime
+
 ## 0.14.1
 
 - Use `@ledgerhq/hw-transport` types from Definitely Typed

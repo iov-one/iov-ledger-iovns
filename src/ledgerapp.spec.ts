@@ -1,7 +1,7 @@
 import "regenerator-runtime"; // required by @ledgerhq/hw-transport-node-hid
 
 import { Ed25519, Sha512 } from "@iov/crypto";
-import { Encoding } from "@iov/encoding";
+import { Encoding, isUint8Array } from "@iov/encoding";
 import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import * as semver from "semver";
@@ -199,6 +199,7 @@ describe("IovLedgerApp", () => {
       if (version.testMode) {
         if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
+        expect(isUint8Array(responseSign.signature)).toEqual(true);
         // Check signature is valid
         const prehash = new Sha512(txBlob).digest();
         const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
@@ -234,6 +235,7 @@ describe("IovLedgerApp", () => {
       } else {
         if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
+        expect(isUint8Array(responseSign.signature)).toEqual(true);
         // Check signature is valid
         const prehash = new Sha512(txBlob).digest();
         const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
@@ -263,6 +265,7 @@ describe("IovLedgerApp", () => {
       if (version.testMode) {
         if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
+        expect(isUint8Array(responseSign.signature)).toEqual(true);
         // Check signature is valid
         const prehash = new Sha512(txBlob).digest();
         const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
@@ -298,6 +301,7 @@ describe("IovLedgerApp", () => {
       } else {
         if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
+        expect(isUint8Array(responseSign.signature)).toEqual(true);
         // Check signature is valid
         const prehash = new Sha512(txBlob).digest();
         const valid = await Ed25519.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);

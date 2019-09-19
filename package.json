@@ -40,6 +40,7 @@
     "@iov/encoding": "^0.17.0",
     "@ledgerhq/hw-transport-node-hid": "^4.68.2",
     "@types/jasmine": "^3.3.7",
+    "@types/ledgerhq__hw-transport-node-hid": "^4.22.1",
     "@types/node-hid": "^0.7.2",
     "@types/semver": "^6.0.1",
     "@typescript-eslint/eslint-plugin": "^2.0.0",

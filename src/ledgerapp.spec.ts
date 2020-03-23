@@ -1,3 +1,4 @@
+// eslint-disable-next-line simple-import-sort/sort
 import "regenerator-runtime"; // required by @ledgerhq/hw-transport-node-hid
 
 import { Ed25519, Sha512 } from "@iov/crypto";

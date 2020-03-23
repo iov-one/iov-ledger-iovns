@@ -73,7 +73,7 @@ describe("IovLedgerApp", () => {
         }),
       );
       expect(response.version).toMatch(/^[0-9]+\.[0-9]+\.[0-9]+$/);
-      expect(semver.satisfies(response.version, "^0.10.0")).toEqual(true);
+      expect(semver.satisfies(response.version, "^0.12.0")).toEqual(true);
     });
   });
 
@@ -88,15 +88,16 @@ describe("IovLedgerApp", () => {
       const response = await app.getAddress(5);
       if (!isIovLedgerAppAddress(response)) throw new Error(response.errorMessage);
 
+      // Dave's Nano S
       expect(response.pubkey).toEqual(
-        fromHex("05173bf18e8bc4203176be82c89ca9519100fe2cf340cbad239750bd3e3ff668"),
+        fromHex("b0183e5a01425084175eaf18516786e627c4c0d883f84f0e98f3500b0b01e100"),
       );
 
       // Depending on the app version, we can get mainnet or testnet addresses
       if (version.testMode) {
-        expect(response.address).toEqual("tiov1k9rxcg8htk6wcq546p86ksgqhq8fza7hykl8mp");
+        expect(response.address).toEqual("tiov1q7etanjstk2aj4u24wpw8l4s3agccdm2hsxdsl");
       } else {
-        expect(response.address).toEqual("iov1k9rxcg8htk6wcq546p86ksgqhq8fza7h2rkrms");
+        expect(response.address).toEqual("iov1q7etanjstk2aj4u24wpw8l4s3agccdm2e90fsw");
       }
     });
 
@@ -119,36 +120,35 @@ describe("IovLedgerApp", () => {
       if (!isIovLedgerAppAddress(response3)) throw new Error(response3.errorMessage);
       if (!isIovLedgerAppAddress(response4)) throw new Error(response4.errorMessage);
 
-      // Calculated using Token Finder tool with mnemonic
-      // equip will roof matter pink blind book anxiety banner elbow sun young
+      // Dave's Nano S
       expect(response0.pubkey).toEqual(
-        fromHex("5fe68efa9e7e6373a51f6e519b4ffc7d6330c6cd011d00f6a9663ca82c361bff"),
+        fromHex("1a212f01206bfeb41848fd0d2b722cc3301a47ad04a42b018323a860f5ea7705"),
       );
       expect(response1.pubkey).toEqual(
-        fromHex("385fe5a946e46727297cf7ad0bff7efa637e1c7516ea2fd9f6dc717404494455"),
+        fromHex("5025e4df716cf3be33ffe6b4a13c91d6ebad4dd5a5397c9c4364c5f48ac73678"),
       );
       expect(response2.pubkey).toEqual(
-        fromHex("c8dca85dd7f1c4f231e46d579199b310975379c37445c664d1be824f088dbe07"),
+        fromHex("0a22dde037ffe39a33404d69c504aaf8daf47bf91966126b0af809f76fc67651"),
       );
       expect(response3.pubkey).toEqual(
-        fromHex("5ad1501134fb4ba2f5b1d7c8ca539152d7c31f07a301f6192bb757b3dab52a88"),
+        fromHex("e20030b60015caf713e215561a7428b6a35b6d86f06ef830f350bbc3525e533a"),
       );
       expect(response4.pubkey).toEqual(
-        fromHex("f10ea4323ac84582370321208c71ca77700c85a099991aefc153bc5284c9c025"),
+        fromHex("fe289f8990e0dfe0a8ce8a503c7c93067438b8c7d951afb8db2483a8ef8b1f78"),
       );
 
       if (version.testMode) {
-        expect(response0.address).toEqual("tiov1l678408y7a64cj66s8j64fevmspyfxdmv38cxw");
-        expect(response1.address).toEqual("tiov1u42wk6lk009ex9t87gt54sn24m2psl4axfrd28");
-        expect(response2.address).toEqual("tiov1lxry06n8l760mkthg7sgda48cne4t26llzwntz");
-        expect(response3.address).toEqual("tiov10ur3vxhy00el95g5fqthe889z6lzqgr0f63tnl");
-        expect(response4.address).toEqual("tiov12evzw2nds3qzfdrlnka5hx25azaarh3qypr6uv");
+        expect(response0.address).toEqual("tiov1fpezwaxfnmef8tyyg4t7avz9a2d9gqh32zwf8z");
+        expect(response1.address).toEqual("tiov1falpfyxkcpkkuf3txddrf5407yj9w4zfqh8wwl");
+        expect(response2.address).toEqual("tiov1hkm5lrvnnp5xm8dd4x5ukzdeajmzmts3gvmguq");
+        expect(response3.address).toEqual("tiov17tekp649jsksu28kcxxl22lrqpd83r5ludnd5t");
+        expect(response4.address).toEqual("tiov1pe5fa7hy3s0803zl4jv7gwdj5h9mxx9hjug2gr");
       } else {
-        expect(response0.address).toEqual("iov1l678408y7a64cj66s8j64fevmspyfxdmzywuxl");
-        expect(response1.address).toEqual("iov1u42wk6lk009ex9t87gt54sn24m2psl4agu2f2k");
-        expect(response2.address).toEqual("iov1lxry06n8l760mkthg7sgda48cne4t26l3h8htn");
-        expect(response3.address).toEqual("iov10ur3vxhy00el95g5fqthe889z6lzqgr080c0nw");
-        expect(response4.address).toEqual("iov12evzw2nds3qzfdrlnka5hx25azaarh3q2527ua");
+        expect(response0.address).toEqual("iov1fpezwaxfnmef8tyyg4t7avz9a2d9gqh3yh8d8n");
+        expect(response1.address).toEqual("iov1falpfyxkcpkkuf3txddrf5407yj9w4zfwzw2ww");
+        expect(response2.address).toEqual("iov1hkm5lrvnnp5xm8dd4x5ukzdeajmzmts3xejvu3");
+        expect(response3.address).toEqual("iov17tekp649jsksu28kcxxl22lrqpd83r5ljc6f56");
+        expect(response4.address).toEqual("iov1pe5fa7hy3s0803zl4jv7gwdj5h9mxx9hufpwgj");
       }
     });
 
@@ -163,15 +163,16 @@ describe("IovLedgerApp", () => {
       const response = await app.getAddress(5, true);
       if (!isIovLedgerAppAddress(response)) throw new Error(response.errorMessage);
 
+      // Dave's Nano S
       expect(response.pubkey).toEqual(
-        fromHex("05173bf18e8bc4203176be82c89ca9519100fe2cf340cbad239750bd3e3ff668"),
+        fromHex("b0183e5a01425084175eaf18516786e627c4c0d883f84f0e98f3500b0b01e100"),
       );
 
       // Depending on the app version, we can get mainnet or testnet addresses
       if (version.testMode) {
-        expect(response.address).toEqual("tiov1k9rxcg8htk6wcq546p86ksgqhq8fza7hykl8mp");
+        expect(response.address).toEqual("tiov1q7etanjstk2aj4u24wpw8l4s3agccdm2hsxdsl");
       } else {
-        expect(response.address).toEqual("iov1k9rxcg8htk6wcq546p86ksgqhq8fza7h2rkrms");
+        expect(response.address).toEqual("iov1q7etanjstk2aj4u24wpw8l4s3agccdm2e90fsw");
       }
     });
   });

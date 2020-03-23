@@ -28,6 +28,12 @@ const INS = {
   SIGN_ED25519: 0x02,
 };
 
+const PAYLOAD_TYPE = {
+  INIT: 0x00,
+  ADD: 0x01,
+  LAST: 0x02,
+};
+
 const ERROR_DESCRIPTION: { readonly [index: number]: string } = {
   1: "U2F: Unknown",
   2: "U2F: Bad request",
@@ -228,8 +234,16 @@ export class IovLedgerApp {
     chunkNum: number,
     chunk: Buffer,
   ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
+    let payloadType = PAYLOAD_TYPE.ADD;
+    if (chunkIdx === 1) {
+      payloadType = PAYLOAD_TYPE.INIT;
+    }
+    if (chunkIdx === chunkNum) {
+      payloadType = PAYLOAD_TYPE.LAST;
+    }
+
     return this.transport
-      .send(CLA, INS.SIGN_ED25519, chunkIdx, chunkNum, chunk, [0x9000, 0x6a80])
+      .send(CLA, INS.SIGN_ED25519, payloadType, 0, chunk, [0x9000, 0x6984, 0x6a80])
       .then(response => {
         if (response.length < 2) {
           throw new Error("Response too short to cut status code");
@@ -240,10 +254,10 @@ export class IovLedgerApp {
         let errorMessage = errorCodeToString(returnCode);
 
         let signature = new Uint8Array();
-        if (returnCode === 0x6a80) {
+        if (returnCode === 0x6a80 || returnCode === 0x6984) {
           errorMessage = response.slice(0, response.length - 2).toString("ascii");
         } else {
-          signature = Uint8Array.from(response.slice(0, response.length - 2));
+          signature = Uint8Array.from(response.slice(0, 64));
         }
 
         return {

@@ -32,8 +32,11 @@
     "build": "shx rm -rf ./build && tsc && yarn move-types",
     "build-or-skip": "[ -n \"$SKIP_BUILD\" ] || yarn build"
   },
+  "resolutions": {
+    "minimist": "^1.2.5"
+  },
   "dependencies": {
-    "@types/ledgerhq__hw-transport": "^4.21.2"
+    "@ledgerhq/hw-transport": "^5.11.0"
   },
   "devDependencies": {
     "@iov/crypto": "^0.17.0",

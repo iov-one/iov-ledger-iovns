@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+
+Breaking changes:
+- Use Ledger firmware 1.6.0
+
 ## 0.14.2
 
 - Ensure signatures are Uint8Array not Buffers at runtime

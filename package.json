@@ -36,7 +36,7 @@
     "minimist": "^1.2.5"
   },
   "dependencies": {
-    "@types/ledgerhq__hw-transport": "^4.21.2"
+    "@ledgerhq/hw-transport": "^5.11.0"
   },
   "devDependencies": {
     "@iov/crypto": "^0.17.0",

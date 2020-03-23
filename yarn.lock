@@ -184,7 +184,7 @@
     "@types/node" "*"
     "@types/node-hid" "*"
 
-"@types/ledgerhq__hw-transport@*", "@types/ledgerhq__hw-transport@^4.21.2":
+"@types/ledgerhq__hw-transport@*":
   version "4.21.2"
   resolved "https://registry.yarnpkg.com/@types/ledgerhq__hw-transport/-/ledgerhq__hw-transport-4.21.2.tgz#92eaea9e4669df2c8ec5292b694097d1629b05c1"
   integrity sha512-NhJwkdxdsqj/ZTq9KuBYtN+rDYOVYrlR3ByYNfK78iUOIlmXcXFBtfkhBUpX8c7dbE5uJZOjDdM3EC7Kf3Fakg==

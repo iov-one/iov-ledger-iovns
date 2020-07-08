@@ -16,22 +16,33 @@
  */
 import Transport from "@ledgerhq/hw-transport";
 
-const CLA = 0x22;
+const CLA = 0x55;
 const CHUNK_SIZE = 250;
 const APP_KEY = "IOV";
 
 const IOV_COIN_TYPE = 234;
+const HRP = "star";
 
 const INS = {
   GET_VERSION: 0x00,
-  GET_ADDR_ED25519: 0x01,
-  SIGN_ED25519: 0x02,
+  INS_PUBLIC_KEY_SECP256K1: 0x01, // Obsolete
+  SIGN_SECP256K1: 0x02,
+  GET_ADDR_SECP256K1: 0x04,
 };
 
 const PAYLOAD_TYPE = {
   INIT: 0x00,
   ADD: 0x01,
   LAST: 0x02,
+};
+
+const P1_VALUES = {
+  ONLY_RETRIEVE: 0x00,
+  SHOW_ADDRESS_IN_DEVICE: 0x01,
+};
+
+export const ERROR_CODE = {
+  NoError: 0x9000,
 };
 
 const ERROR_DESCRIPTION: { readonly [index: number]: string } = {
@@ -80,9 +91,7 @@ export interface IovLedgerAppVersion extends IovLedgerAppErrorState {
   readonly deviceLocked: boolean;
 }
 
-export function isIovLedgerAppVersion(
-  data: IovLedgerAppVersion | IovLedgerAppErrorState,
-): data is IovLedgerAppVersion {
+export function isIovLedgerAppVersion(data: IovLedgerAppVersion | IovLedgerAppErrorState): data is IovLedgerAppVersion {
   return (
     typeof (data as IovLedgerAppVersion).testMode !== "undefined" &&
     typeof (data as IovLedgerAppVersion).version === "string" &&
@@ -95,9 +104,7 @@ export interface IovLedgerAppAddress extends IovLedgerAppErrorState {
   readonly address: string;
 }
 
-export function isIovLedgerAppAddress(
-  data: IovLedgerAppAddress | IovLedgerAppErrorState,
-): data is IovLedgerAppAddress {
+export function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppErrorState): data is IovLedgerAppAddress {
   return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }
 
@@ -112,18 +119,33 @@ export function isIovLedgerAppSignature(
 }
 
 export class IovLedgerApp {
+  public static serializeHRP(hrp: string = HRP): Buffer {
+    if (hrp == null || hrp.length < 3 || hrp.length > 83) {
+      throw new Error("Invalid HRP");
+    }
+
+    const buf = Buffer.alloc(1 + hrp.length);
+
+    buf.writeUInt8(hrp.length, 0);
+    buf.write(hrp, 1);
+
+    return buf;
+  }
+
   public static serializeBIP32(accountIndex: number): Buffer {
     if (!Number.isInteger(accountIndex)) throw new Error("Input must be an integer");
     if (accountIndex < 0 || accountIndex > 2 ** 31 - 1) throw new Error("Index is out of range");
 
-    const buf = Buffer.alloc(12);
+    const buf = Buffer.alloc(20);
     buf.writeUInt32LE(harden(44), 0);
     buf.writeUInt32LE(harden(IOV_COIN_TYPE), 4);
     buf.writeUInt32LE(harden(accountIndex), 8);
+    buf.writeUInt32LE(0, 12);
+    buf.writeUInt32LE(0, 16);
     return buf;
   }
 
-  public static signGetChunks(addressIndex: number, message: Uint8Array): readonly Buffer[] {
+  public static signGetChunks(addressIndex: number, message: string): readonly Buffer[] {
     // tslint:disable-next-line: readonly-array
     const chunks = [];
     const bip32Path = IovLedgerApp.serializeBIP32(addressIndex);
@@ -193,34 +215,36 @@ export class IovLedgerApp {
     requireConfirmation = false,
   ): Promise<IovLedgerAppAddress | IovLedgerAppErrorState> {
     const bip32Path = IovLedgerApp.serializeBIP32(addressIndex);
+    const hrp = IovLedgerApp.serializeHRP();
+    const data = Buffer.from([...hrp, ...bip32Path]);
+    const p1 = requireConfirmation ? P1_VALUES.SHOW_ADDRESS_IN_DEVICE : P1_VALUES.ONLY_RETRIEVE;
 
-    let p1 = 0;
-    if (requireConfirmation) p1 = 1;
-
-    return this.transport.send(CLA, INS.GET_ADDR_ED25519, p1, 0, bip32Path).then(response => {
+    return this.transport.send(CLA, INS.GET_ADDR_SECP256K1, p1, 0, data, [ERROR_CODE.NoError]).then(response => {
       const errorCodeData = response.slice(-2);
-      const errorCode = errorCodeData[0] * 256 + errorCodeData[1];
+      const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
+
+      const compressedPk = new Uint8Array([...response.slice(0, 33)]);
+      const bech32Address = Buffer.from(response.slice(33, -2)).toString("ascii");
+
       const success: IovLedgerAppAddress = {
-        pubkey: new Uint8Array([...response.slice(0, 32)]),
-        address: response.slice(32, response.length - 2).toString("ascii"),
-        returnCode: errorCode,
-        errorMessage: errorCodeToString(errorCode),
+        pubkey: compressedPk,
+        address: bech32Address,
+        returnCode: returnCode,
+        errorMessage: errorCodeToString(returnCode),
       };
+
       return success;
     }, IovLedgerApp.processErrorResponse);
   }
 
-  public async sign(
-    addressIndex: number,
-    message: Uint8Array,
-  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
+  public async sign(addressIndex: number, message: string): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
     const chunks = IovLedgerApp.signGetChunks(addressIndex, message);
     return this.signSendChunk(1, chunks.length, chunks[0]).then(async result => {
       let latestResult = result;
       for (let i = 1; i < chunks.length; i += 1) {
         // eslint-disable-next-line no-await-in-loop,no-param-reassign
         latestResult = await this.signSendChunk(1 + i, chunks.length, chunks[i]);
-        if (result.returnCode !== 0x9000) {
+        if (result.returnCode !== ERROR_CODE.NoError) {
           break;
         }
       }
@@ -243,7 +267,7 @@ export class IovLedgerApp {
     }
 
     return this.transport
-      .send(CLA, INS.SIGN_ED25519, payloadType, 0, chunk, [0x9000, 0x6984, 0x6a80])
+      .send(CLA, INS.SIGN_SECP256K1, payloadType, 0, chunk, [ERROR_CODE.NoError, 0x6984, 0x6a80])
       .then(response => {
         if (response.length < 2) {
           throw new Error("Response too short to cut status code");
@@ -255,9 +279,9 @@ export class IovLedgerApp {
 
         let signature = new Uint8Array();
         if (returnCode === 0x6a80 || returnCode === 0x6984) {
-          errorMessage = response.slice(0, response.length - 2).toString("ascii");
+          errorMessage = `${errorMessage} : ${response.slice(0, response.length - 2).toString("ascii")}`;
         } else {
-          signature = Uint8Array.from(response.slice(0, 64));
+          signature = Uint8Array.from(response.slice(0, response.length - 2));
         }
 
         return {

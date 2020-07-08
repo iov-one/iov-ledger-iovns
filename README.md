@@ -2,17 +2,14 @@
 
 [![npm version](https://img.shields.io/npm/v/@iov/ledger-bns.svg)](https://www.npmjs.com/package/@iov/ledger-bns)
 
-This package provides an adaptor to use the bns ledger app as a wallet.
-The app is still in dev mode and not available in the ledger store, so
-this is really for cutting edge devs now.
+This package provides an adaptor to use the IOV Ledger app as a wallet.
 
 It should also demonstrate how to implement an additional Wallet outside of @iov/keycontrol
 that can be dynamically loaded by any app in initialization.
 
 ## Getting started
 
-Create a wallet for signing with a Ledger.
-All further functionality is provided by the `UserProfile`.
+Create a wallet for signing with a Ledger.  All further functionality is provided by the `UserProfile`.
 
 ```ts
 import { UserProfile } from "@iov/core";

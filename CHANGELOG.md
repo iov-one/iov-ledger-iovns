@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0
+
+Breaking changes:
+- Sign a String instead of a Uint8Array
+- Use Secp256k1 instead of Ed25519
+
 ## 1.0.0
 
 Breaking changes:

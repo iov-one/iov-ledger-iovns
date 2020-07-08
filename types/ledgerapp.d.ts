@@ -1,6 +1,9 @@
 /// <reference types="node" />
 /// <reference types="ledgerhq__hw-transport" />
 import Transport from "@ledgerhq/hw-transport";
+export declare const ERROR_CODE: {
+    NoError: number;
+};
 export interface IovLedgerAppErrorState {
     readonly returnCode: number;
     readonly errorMessage: string;
@@ -21,13 +24,14 @@ export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
 }
 export declare function isIovLedgerAppSignature(data: IovLedgerAppSignature | IovLedgerAppErrorState): data is IovLedgerAppSignature;
 export declare class IovLedgerApp {
+    static serializeHRP(hrp?: string): Buffer;
     static serializeBIP32(accountIndex: number): Buffer;
-    static signGetChunks(addressIndex: number, message: Uint8Array): readonly Buffer[];
+    static signGetChunks(addressIndex: number, message: string): readonly Buffer[];
     private static processErrorResponse;
     private readonly transport;
     constructor(transport: Transport);
     getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState>;
     getAddress(addressIndex: number, requireConfirmation?: boolean): Promise<IovLedgerAppAddress | IovLedgerAppErrorState>;
-    sign(addressIndex: number, message: Uint8Array): Promise<IovLedgerAppSignature | IovLedgerAppErrorState>;
+    sign(addressIndex: number, message: string): Promise<IovLedgerAppSignature | IovLedgerAppErrorState>;
     private signSendChunk;
 }

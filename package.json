@@ -1,6 +1,6 @@
 {
-  "name": "@iov/ledger-bns",
-  "version": "2.0.1",
+  "name": "@iov/ledger-iovns",
+  "version": "2.0.2",
   "description": "Integration of ledger-cosmos-1 application",
   "author": "IOV SAS <admin@iov.one>",
   "license": "Apache-2.0",
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/iov-one/iov-ledger-bns"
+    "url": "https://github.com/iov-one/iov-ledger-iovns"
   },
   "publishConfig": {
     "access": "public"

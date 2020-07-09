@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+- Convert signature from DER in iovLedgerApp.sign()
+- Allow a transaction-like object to be passed to iovLedgerApp.sign()
+  - Ledger app expects `msgs` but the chain expects `msg` in the tx object
+- Allow optional human readable part (HRP) arg to iovLedgerApp.constructor()
+
 ## 2.0.0
 
 Breaking changes:

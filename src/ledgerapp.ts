@@ -1,4 +1,5 @@
 /*
+ *  (c) 2020 IOV SAS
  *  (c) 2019 ZondaX GmbH
  *  (c) 2016-2017 Ledger
  *
@@ -14,7 +15,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+import { Secp256k1Signature } from "@iov/crypto";
 import Transport from "@ledgerhq/hw-transport";
+
+const { fromDer } = Secp256k1Signature;
 
 const CLA = 0x55;
 const CHUNK_SIZE = 250;
@@ -108,17 +112,40 @@ export function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppEr
   return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }
 
-export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
+export interface IovLedgerAppRawSignature extends IovLedgerAppErrorState {
   readonly signature: Uint8Array;
 }
 
+export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
+  readonly signature: Secp256k1Signature;
+}
+
 export function isIovLedgerAppSignature(
-  data: IovLedgerAppSignature | IovLedgerAppErrorState,
-): data is IovLedgerAppSignature {
-  return typeof (data as IovLedgerAppSignature).signature !== "undefined";
+  data: IovLedgerAppRawSignature | IovLedgerAppSignature | IovLedgerAppErrorState,
+): data is IovLedgerAppRawSignature | IovLedgerAppSignature {
+  const raw = data as IovLedgerAppRawSignature;
+  const sig = data as IovLedgerAppSignature;
+
+  return (raw && raw.signature.length > 0) || (sig && sig.signature instanceof Secp256k1Signature);
 }
 
 export class IovLedgerApp {
+  public static sortObject(unsorted: any): object | readonly any[] | string | number {
+    if (Array.isArray(unsorted)) return unsorted.map(IovLedgerApp.sortObject);
+
+    if (typeof unsorted !== "object") return unsorted;
+
+    return Object.keys(unsorted)
+      .sort()
+      .reduce((o, key: string) => {
+        // tslint:disable-next-line no-object-mutation
+        if (unsorted[key]) o[key] = IovLedgerApp.sortObject(unsorted[key]);
+
+        return o;
+        // tslint:disable-next-line readonly-keyword
+      }, {} as { [key: string]: any });
+  }
+
   public static serializeHRP(hrp: string = HRP): Buffer {
     if (hrp == null || hrp.length < 3 || hrp.length > 83) {
       throw new Error("Invalid HRP");
@@ -182,14 +209,16 @@ export class IovLedgerApp {
   }
 
   private readonly transport: Transport;
+  private readonly hrp: string;
 
-  constructor(transport: Transport) {
+  constructor(transport: Transport, hrp = HRP) {
     if (!transport) {
       throw new Error("Transport has not been defined");
     }
 
     this.transport = transport;
     this.transport.decorateAppAPIMethods(this, ["getVersion", "getAddress", "sign"], APP_KEY);
+    this.hrp = hrp;
   }
 
   public async getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState> {
@@ -215,7 +244,7 @@ export class IovLedgerApp {
     requireConfirmation = false,
   ): Promise<IovLedgerAppAddress | IovLedgerAppErrorState> {
     const bip32Path = IovLedgerApp.serializeBIP32(addressIndex);
-    const hrp = IovLedgerApp.serializeHRP();
+    const hrp = IovLedgerApp.serializeHRP(this.hrp);
     const data = Buffer.from([...hrp, ...bip32Path]);
     const p1 = requireConfirmation ? P1_VALUES.SHOW_ADDRESS_IN_DEVICE : P1_VALUES.ONLY_RETRIEVE;
 
@@ -237,8 +266,12 @@ export class IovLedgerApp {
     }, IovLedgerApp.processErrorResponse);
   }
 
-  public async sign(addressIndex: number, message: string): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
-    const chunks = IovLedgerApp.signGetChunks(addressIndex, message);
+  public async sign(
+    addressIndex: number,
+    message: string | object,
+  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
+    const msg = typeof message === "string" ? message : JSON.stringify(IovLedgerApp.sortObject(message));
+    const chunks = IovLedgerApp.signGetChunks(addressIndex, msg);
     return this.signSendChunk(1, chunks.length, chunks[0]).then(async result => {
       let latestResult = result;
       for (let i = 1; i < chunks.length; i += 1) {
@@ -249,7 +282,15 @@ export class IovLedgerApp {
         }
       }
 
-      return latestResult;
+      if (!isIovLedgerAppSignature(latestResult)) return latestResult;
+
+      const signed: IovLedgerAppSignature = {
+        returnCode: latestResult.returnCode,
+        signature: fromDer(latestResult.signature),
+        errorMessage: latestResult.errorMessage,
+      };
+
+      return signed;
     }, IovLedgerApp.processErrorResponse);
   }
 
@@ -257,7 +298,7 @@ export class IovLedgerApp {
     chunkIdx: number,
     chunkNum: number,
     chunk: Buffer,
-  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
+  ): Promise<IovLedgerAppRawSignature | IovLedgerAppErrorState> {
     let payloadType = PAYLOAD_TYPE.ADD;
     if (chunkIdx === 1) {
       payloadType = PAYLOAD_TYPE.INIT;

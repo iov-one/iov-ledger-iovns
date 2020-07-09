@@ -1,4 +1,5 @@
 /*
+ *  (c) 2020 IOV SAS
  *  (c) 2019 ZondaX GmbH
  *  (c) 2016-2017 Ledger
  *
@@ -15,6 +16,9 @@
  *  limitations under the License.
  */
 import Transport from "@ledgerhq/hw-transport";
+import { Secp256k1Signature } from "@iov/crypto";
+
+const { fromDer } = Secp256k1Signature;
 
 const CLA = 0x55;
 const CHUNK_SIZE = 250;
@@ -108,13 +112,17 @@ export function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppEr
   return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }
 
-export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
+export interface IovLedgerAppRawSignature extends IovLedgerAppErrorState {
   readonly signature: Uint8Array;
 }
 
+export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
+  readonly signature: Secp256k1Signature;
+}
+
 export function isIovLedgerAppSignature(
-  data: IovLedgerAppSignature | IovLedgerAppErrorState,
-): data is IovLedgerAppSignature {
+  data: IovLedgerAppRawSignature | IovLedgerAppSignature | IovLedgerAppErrorState,
+): data is IovLedgerAppRawSignature | IovLedgerAppSignature {
   return typeof (data as IovLedgerAppSignature).signature !== "undefined";
 }
 
@@ -249,7 +257,15 @@ export class IovLedgerApp {
         }
       }
 
-      return latestResult;
+      if (!isIovLedgerAppSignature(latestResult)) return latestResult;
+
+      const signed: IovLedgerAppSignature = {
+        returnCode: latestResult.returnCode,
+        signature: fromDer(latestResult.signature),
+        errorMessage: latestResult.errorMessage,
+      };
+
+      return signed;
     }, IovLedgerApp.processErrorResponse);
   }
 
@@ -257,7 +273,7 @@ export class IovLedgerApp {
     chunkIdx: number,
     chunkNum: number,
     chunk: Buffer,
-  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
+  ): Promise<IovLedgerAppRawSignature | IovLedgerAppErrorState> {
     let payloadType = PAYLOAD_TYPE.ADD;
     if (chunkIdx === 1) {
       payloadType = PAYLOAD_TYPE.INIT;

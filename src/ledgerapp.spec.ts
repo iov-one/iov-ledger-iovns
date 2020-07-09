@@ -1,5 +1,5 @@
 import { Secp256k1, Secp256k1Signature, Sha256 } from "@iov/crypto";
-import { Encoding, isUint8Array } from "@iov/encoding";
+import { Encoding } from "@iov/encoding";
 import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import * as semver from "semver";
@@ -13,7 +13,6 @@ import {
 import { IovLedgerApp, isIovLedgerAppAddress, isIovLedgerAppSignature, isIovLedgerAppVersion } from "./ledgerapp";
 
 const { fromHex } = Encoding;
-const { fromDer } = Secp256k1Signature;
 
 describe("IovLedgerApp", () => {
   // https://github.com/Zondax/ledger-cosmos-js/blob/master/tests/basic.ispec.js#L132
@@ -154,12 +153,12 @@ describe("IovLedgerApp", () => {
       const responseSign = await app.sign(accountIndex, message);
       if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
-      expect(isUint8Array(responseSign.signature)).toEqual(true);
+      expect(responseSign.signature instanceof Secp256k1Signature).toEqual(true);
 
       // Check signature is valid
       const encoded = Uint8Array.from(message.split(""), s => s.charCodeAt(0));
       const prehash = new Sha256(encoded).digest();
-      const valid = await Secp256k1.verifySignature(fromDer(responseSign.signature), prehash, responseAddr.pubkey);
+      const valid = await Secp256k1.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
 
       expect(valid).toEqual(true);
     });

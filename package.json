@@ -1,6 +1,6 @@
 {
   "name": "@iov/ledger-bns",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Integration of ledger-cosmos-1 application",
   "author": "IOV SAS <admin@iov.one>",
   "license": "Apache-2.0",

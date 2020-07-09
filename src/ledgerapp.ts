@@ -15,8 +15,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-import Transport from "@ledgerhq/hw-transport";
 import { Secp256k1Signature } from "@iov/crypto";
+import Transport from "@ledgerhq/hw-transport";
 
 const { fromDer } = Secp256k1Signature;
 
@@ -123,10 +123,27 @@ export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
 export function isIovLedgerAppSignature(
   data: IovLedgerAppRawSignature | IovLedgerAppSignature | IovLedgerAppErrorState,
 ): data is IovLedgerAppRawSignature | IovLedgerAppSignature {
-  return typeof (data as IovLedgerAppSignature).signature !== "undefined";
+  const raw = data as IovLedgerAppRawSignature;
+  const sig = data as IovLedgerAppSignature;
+
+  return (raw && raw.signature.length > 0) || (sig && sig.signature instanceof Secp256k1Signature);
 }
 
 export class IovLedgerApp {
+  public static sortObject(unsorted: any): object | Array<any> | string | number {
+    if (Array.isArray(unsorted)) return unsorted.map(IovLedgerApp.sortObject);
+
+    if (typeof unsorted !== "object") return unsorted;
+
+    return Object.keys(unsorted)
+      .sort()
+      .reduce((o, key: string) => {
+        if (unsorted[key]) o[key] = IovLedgerApp.sortObject(unsorted[key]);
+
+        return o;
+      }, {} as { [key: string]: any });
+  }
+
   public static serializeHRP(hrp: string = HRP): Buffer {
     if (hrp == null || hrp.length < 3 || hrp.length > 83) {
       throw new Error("Invalid HRP");
@@ -245,8 +262,12 @@ export class IovLedgerApp {
     }, IovLedgerApp.processErrorResponse);
   }
 
-  public async sign(addressIndex: number, message: string): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
-    const chunks = IovLedgerApp.signGetChunks(addressIndex, message);
+  public async sign(
+    addressIndex: number,
+    message: string | object,
+  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
+    const msg = typeof message == "string" ? message : JSON.stringify(IovLedgerApp.sortObject(message));
+    const chunks = IovLedgerApp.signGetChunks(addressIndex, msg);
     return this.signSendChunk(1, chunks.length, chunks[0]).then(async result => {
       let latestResult = result;
       for (let i = 1; i < chunks.length; i += 1) {

@@ -138,7 +138,7 @@ describe("IovLedgerApp", () => {
   });
 
   describe("sign", () => {
-    it("can sign", async () => {
+    it("can sign string", async () => {
       pendingWithoutSeededLedger();
       pendingWithoutInteractiveLedger();
 
@@ -157,6 +157,55 @@ describe("IovLedgerApp", () => {
 
       // Check signature is valid
       const encoded = Uint8Array.from(message.split(""), s => s.charCodeAt(0));
+      const prehash = new Sha256(encoded).digest();
+      const valid = await Secp256k1.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+
+      expect(valid).toEqual(true);
+    });
+
+    it("can sign object", async () => {
+      pendingWithoutSeededLedger();
+      pendingWithoutInteractiveLedger();
+
+      const app = new IovLedgerApp(transport!);
+      const version = await app.getVersion();
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
+
+      const accountIndex = 0;
+      const responseAddr = await app.getAddress(accountIndex);
+      if (!isIovLedgerAppAddress(responseAddr)) throw new Error(responseAddr.errorMessage);
+      const tx = {
+        // NOTE: Ledger app expects `msgs` but the chain expects `msg`
+        msgs: [
+          {
+            type: "domain/RegisterDomain",
+            value: {
+              domain: "registered_via_ledger",
+              admin: "star1478t4fltj689nqu83vsmhz27quk7uggjwe96yk",
+              type: "closed",
+              broker: "",
+              // eslint-disable-next-line @typescript-eslint/camelcase
+              fee_payer: "",
+            },
+          },
+        ],
+        fee: { amount: [{ denom: "uvoi", amount: "2000000" }], gas: "200000" },
+        signatures: null,
+        memo: "this is the memo",
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        account_number: "123",
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        chain_id: "iovns-galaxynet",
+        sequence: "456",
+      };
+      const responseSign = await app.sign(accountIndex, tx);
+      if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
+
+      expect(responseSign.signature instanceof Secp256k1Signature).toEqual(true);
+
+      // Check signature is valid
+      const sorted = JSON.stringify(IovLedgerApp.sortObject(tx));
+      const encoded = Uint8Array.from(sorted.split(""), s => s.charCodeAt(0));
       const prehash = new Sha256(encoded).digest();
       const valid = await Secp256k1.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
 

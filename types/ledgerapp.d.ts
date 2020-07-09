@@ -1,5 +1,6 @@
 /// <reference types="node" />
 /// <reference types="ledgerhq__hw-transport" />
+import { Secp256k1Signature } from "@iov/crypto";
 import Transport from "@ledgerhq/hw-transport";
 export declare const ERROR_CODE: {
     NoError: number;
@@ -19,19 +20,24 @@ export interface IovLedgerAppAddress extends IovLedgerAppErrorState {
     readonly address: string;
 }
 export declare function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppErrorState): data is IovLedgerAppAddress;
-export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
+export interface IovLedgerAppRawSignature extends IovLedgerAppErrorState {
     readonly signature: Uint8Array;
 }
-export declare function isIovLedgerAppSignature(data: IovLedgerAppSignature | IovLedgerAppErrorState): data is IovLedgerAppSignature;
+export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
+    readonly signature: Secp256k1Signature;
+}
+export declare function isIovLedgerAppSignature(data: IovLedgerAppRawSignature | IovLedgerAppSignature | IovLedgerAppErrorState): data is IovLedgerAppRawSignature | IovLedgerAppSignature;
 export declare class IovLedgerApp {
+    static sortObject(unsorted: any): object | readonly any[] | string | number;
     static serializeHRP(hrp?: string): Buffer;
     static serializeBIP32(accountIndex: number): Buffer;
     static signGetChunks(addressIndex: number, message: string): readonly Buffer[];
     private static processErrorResponse;
     private readonly transport;
-    constructor(transport: Transport);
+    private readonly hrp;
+    constructor(transport: Transport, hrp?: string);
     getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState>;
     getAddress(addressIndex: number, requireConfirmation?: boolean): Promise<IovLedgerAppAddress | IovLedgerAppErrorState>;
-    sign(addressIndex: number, message: string): Promise<IovLedgerAppSignature | IovLedgerAppErrorState>;
+    sign(addressIndex: number, message: string | object): Promise<IovLedgerAppSignature | IovLedgerAppErrorState>;
     private signSendChunk;
 }

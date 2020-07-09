@@ -13,7 +13,7 @@ Create a wallet for signing with a Ledger.  All further functionality is provide
 
 ```ts
 import { UserProfile } from "@iov/core";
-import { IovLedgerWallet } from "@iov/ledger-bns";
+import { IovLedgerWallet } from "@iov/ledger-iovns";
 
 const profile = new UserProfile();
 profile.addWallet(new IovLedgerWallet());

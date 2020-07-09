@@ -130,7 +130,7 @@ export function isIovLedgerAppSignature(
 }
 
 export class IovLedgerApp {
-  public static sortObject(unsorted: any): object | Array<any> | string | number {
+  public static sortObject(unsorted: any): object | readonly any[] | string | number {
     if (Array.isArray(unsorted)) return unsorted.map(IovLedgerApp.sortObject);
 
     if (typeof unsorted !== "object") return unsorted;
@@ -138,9 +138,11 @@ export class IovLedgerApp {
     return Object.keys(unsorted)
       .sort()
       .reduce((o, key: string) => {
+        // tslint:disable-next-line no-object-mutation
         if (unsorted[key]) o[key] = IovLedgerApp.sortObject(unsorted[key]);
 
         return o;
+        // tslint:disable-next-line readonly-keyword
       }, {} as { [key: string]: any });
   }
 
@@ -268,7 +270,7 @@ export class IovLedgerApp {
     addressIndex: number,
     message: string | object,
   ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
-    const msg = typeof message == "string" ? message : JSON.stringify(IovLedgerApp.sortObject(message));
+    const msg = typeof message === "string" ? message : JSON.stringify(IovLedgerApp.sortObject(message));
     const chunks = IovLedgerApp.signGetChunks(addressIndex, msg);
     return this.signSendChunk(1, chunks.length, chunks[0]).then(async result => {
       let latestResult = result;

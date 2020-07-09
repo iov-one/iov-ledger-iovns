@@ -72,6 +72,21 @@ describe("IovLedgerApp", () => {
   });
 
   describe("getAddress", () => {
+    it("can get address with custom HRP", async () => {
+      pendingWithoutSeededLedger();
+
+      const app = new IovLedgerApp(transport!, "cosmos");
+      const version = await app.getVersion();
+      if (!isIovLedgerAppVersion(version)) throw new Error(version.errorMessage);
+
+      const response = await app.getAddress(0);
+      if (!isIovLedgerAppAddress(response)) throw new Error(response.errorMessage);
+
+      // Dave's Nano S
+      expect(response.pubkey).toEqual(fromHex("03910af2b917aa3f3d47cbd5acd00515c4254942bd6d288f6c143c58b59c754125"));
+      expect(response.address).toEqual("cosmos1y4t33z7ugz2323vnuhjwftz33quns0t4rfdhku");
+    });
+
     it("can get address", async () => {
       pendingWithoutSeededLedger();
 

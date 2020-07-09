@@ -207,14 +207,16 @@ export class IovLedgerApp {
   }
 
   private readonly transport: Transport;
+  private readonly hrp: string;
 
-  constructor(transport: Transport) {
+  constructor(transport: Transport, hrp = HRP) {
     if (!transport) {
       throw new Error("Transport has not been defined");
     }
 
     this.transport = transport;
     this.transport.decorateAppAPIMethods(this, ["getVersion", "getAddress", "sign"], APP_KEY);
+    this.hrp = hrp;
   }
 
   public async getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState> {
@@ -240,7 +242,7 @@ export class IovLedgerApp {
     requireConfirmation = false,
   ): Promise<IovLedgerAppAddress | IovLedgerAppErrorState> {
     const bip32Path = IovLedgerApp.serializeBIP32(addressIndex);
-    const hrp = IovLedgerApp.serializeHRP();
+    const hrp = IovLedgerApp.serializeHRP(this.hrp);
     const data = Buffer.from([...hrp, ...bip32Path]);
     const p1 = requireConfirmation ? P1_VALUES.SHOW_ADDRESS_IN_DEVICE : P1_VALUES.ONLY_RETRIEVE;
 

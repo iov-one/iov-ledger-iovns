@@ -10,7 +10,13 @@ import {
   pendingWithoutSeededLedger,
   skipTests,
 } from "./common.spec";
-import { IovLedgerApp, isIovLedgerAppAddress, isIovLedgerAppSignature, isIovLedgerAppVersion } from "./ledgerapp";
+import {
+  IovLedgerApp,
+  isIovLedgerAppAddress,
+  isIovLedgerAppInfo,
+  isIovLedgerAppSignature,
+  isIovLedgerAppVersion,
+} from "./ledgerapp";
 
 const { fromHex } = Encoding;
 
@@ -224,6 +230,27 @@ describe("IovLedgerApp", () => {
       const valid = await Secp256k1.verifySignature(signature, prehash, responseAddr.pubkey);
 
       expect(valid).toEqual(true);
+    });
+  });
+
+  describe("getAppInfo", () => {
+    it("works", async () => {
+      pendingWithoutLedger();
+
+      const app = new IovLedgerApp(transport!);
+      const response = await app.getAppInfo();
+
+      if (!isIovLedgerAppInfo(response)) throw new Error(response.errorMessage);
+
+      expect(response.errorMessage).toEqual("No errors");
+      expect(response.appName).toMatch(/^IOV(TEST)?$/);
+      expect(semver.satisfies(response.appVersion, "^2.16.1")).toEqual(true);
+      expect(response.flagLen).toEqual(1);
+      expect(response.flagsValue).toEqual(2);
+      expect(response.flagRecovery).toEqual(false);
+      expect(response.flagPinValidated).toEqual(false);
+      expect(response.flagOnboarded).toEqual(false);
+      expect(response.flagSignedMcuCode).toEqual(true);
     });
   });
 });

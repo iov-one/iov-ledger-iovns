@@ -106,6 +106,31 @@ export interface IovLedgerAppAddress extends IovLedgerAppErrorState {
   readonly address: string;
 }
 
+export interface IovLedgerAppInfo extends IovLedgerAppErrorState {
+  readonly appName: string;
+  readonly appVersion: string;
+  readonly flagLen: number;
+  readonly flagsValue: number;
+  readonly flagRecovery: boolean;
+  readonly flagSignedMcuCode: boolean;
+  readonly flagOnboarded: boolean;
+  readonly flagPinValidated: boolean;
+}
+
+export function isIovLedgerAppInfo(data: IovLedgerAppInfo | IovLedgerAppErrorState): data is IovLedgerAppInfo {
+  return (
+    typeof (data as IovLedgerAppInfo).appName === "string" &&
+    typeof (data as IovLedgerAppInfo).appVersion === "string" &&
+    typeof (data as IovLedgerAppInfo).flagLen === "number" &&
+    typeof (data as IovLedgerAppInfo).flagsValue === "number" &&
+    typeof (data as IovLedgerAppInfo).flagRecovery === "boolean" &&
+    typeof (data as IovLedgerAppInfo).flagSignedMcuCode === "boolean" &&
+    typeof (data as IovLedgerAppInfo).flagOnboarded === "boolean" &&
+    typeof (data as IovLedgerAppInfo).flagPinValidated === "boolean"
+  );
+}
+
+
 export function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppErrorState): data is IovLedgerAppAddress {
   return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }
@@ -208,7 +233,7 @@ export class IovLedgerApp {
     }
 
     this.transport = transport;
-    this.transport.decorateAppAPIMethods(this, ["getVersion", "getAddress", "sign"], APP_KEY);
+    this.transport.decorateAppAPIMethods(this, ["appInfo", "getVersion", "getAddress", "sign"], APP_KEY);
     this.hrp = hrp;
   }
 
@@ -328,5 +353,50 @@ export class IovLedgerApp {
           errorMessage: errorMessage,
         };
       }, IovLedgerApp.processErrorResponse);
+  }
+
+  public async getAppInfo(): Promise<IovLedgerAppInfo | IovLedgerAppErrorState> {
+    return this.transport.send(0xb0, 0x01, 0, 0).then(response => {
+      const errorCodeData = response.slice(-2);
+      const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
+
+      if (response[0] !== 1) {
+        // Ledger responds with format ID 1. There is no spec for any format != 1
+        return {
+          // short-circuit
+          errorMessage: "response format ID not recognized",
+          returnCode: 0x9001,
+        };
+      }
+
+      const appNameLen = response[1];
+      const appName = response.slice(2, 2 + appNameLen).toString("ascii");
+
+      let idx = 2 + appNameLen;
+      const appVersionLen = response[idx];
+
+      idx += 1;
+      const appVersion = response.slice(idx, idx + appVersionLen).toString("ascii");
+
+      idx += appVersionLen;
+      const appFlagsLen = response[idx];
+
+      idx += 1;
+      const flagLen = appFlagsLen;
+      const flagsValue = response[idx];
+
+      return {
+        returnCode: returnCode,
+        errorMessage: errorCodeToString(returnCode),
+        appName: appName,
+        appVersion: appVersion,
+        flagLen: flagLen,
+        flagsValue: flagsValue,
+        flagRecovery: (flagsValue & 1) !== 0,
+        flagSignedMcuCode: (flagsValue & 2) !== 0,
+        flagOnboarded: (flagsValue & 4) !== 0,
+        flagPinValidated: (flagsValue & 128) !== 0,
+      };
+    }, IovLedgerApp.processErrorResponse);
   }
 }

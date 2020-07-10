@@ -236,6 +236,55 @@ export class IovLedgerApp {
     this.hrp = hrp;
   }
 
+  public async getAppInfo(): Promise<IovLedgerAppInfo | IovLedgerAppErrorState> {
+    return this.transport.send(0xb0, 0x01, 0, 0).then(response => {
+      const errorCodeData = response.slice(-2);
+      const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
+
+      if (response[0] !== 1) {
+        // Ledger responds with format ID 1. There is no spec for any format != 1
+        return {
+          // short-circuit
+          errorMessage: "response format ID not recognized",
+          returnCode: 0x9001,
+        };
+      }
+
+      const appNameLen = response[1];
+      const appName = response.slice(2, 2 + appNameLen).toString("ascii");
+
+      let idx = 2 + appNameLen;
+      const appVersionLen = response[idx];
+
+      idx += 1;
+      const appVersion = response.slice(idx, idx + appVersionLen).toString("ascii");
+
+      idx += appVersionLen;
+      const appFlagsLen = response[idx];
+
+      idx += 1;
+      const flagLen = appFlagsLen;
+      const flagsValue = response[idx];
+
+      return {
+        returnCode: returnCode,
+        errorMessage: errorCodeToString(returnCode),
+        appName: appName,
+        appVersion: appVersion,
+        flagLen: flagLen,
+        flagsValue: flagsValue,
+        // tslint:disable-next-line: no-bitwise
+        flagRecovery: (flagsValue & 1) !== 0,
+        // tslint:disable-next-line: no-bitwise
+        flagSignedMcuCode: (flagsValue & 2) !== 0,
+        // tslint:disable-next-line: no-bitwise
+        flagOnboarded: (flagsValue & 4) !== 0,
+        // tslint:disable-next-line: no-bitwise
+        flagPinValidated: (flagsValue & 128) !== 0,
+      };
+    }, IovLedgerApp.processErrorResponse);
+  }
+
   public async getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState> {
     return this.transport.send(CLA, INS.GET_VERSION, 0, 0).then(response => {
       if (response.length < 6) throw new Error(`Response data too short: ${response}`);
@@ -245,6 +294,7 @@ export class IovLedgerApp {
 
       let targetId = 0;
       if (response.length >= 9) {
+        // tslint:disable-next-line: no-bitwise
         targetId = (response[5] << 24) + (response[6] << 16) + (response[7] << 8) + (response[8] << 0);
       }
 
@@ -352,50 +402,5 @@ export class IovLedgerApp {
           errorMessage: errorMessage,
         };
       }, IovLedgerApp.processErrorResponse);
-  }
-
-  public async getAppInfo(): Promise<IovLedgerAppInfo | IovLedgerAppErrorState> {
-    return this.transport.send(0xb0, 0x01, 0, 0).then(response => {
-      const errorCodeData = response.slice(-2);
-      const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
-
-      if (response[0] !== 1) {
-        // Ledger responds with format ID 1. There is no spec for any format != 1
-        return {
-          // short-circuit
-          errorMessage: "response format ID not recognized",
-          returnCode: 0x9001,
-        };
-      }
-
-      const appNameLen = response[1];
-      const appName = response.slice(2, 2 + appNameLen).toString("ascii");
-
-      let idx = 2 + appNameLen;
-      const appVersionLen = response[idx];
-
-      idx += 1;
-      const appVersion = response.slice(idx, idx + appVersionLen).toString("ascii");
-
-      idx += appVersionLen;
-      const appFlagsLen = response[idx];
-
-      idx += 1;
-      const flagLen = appFlagsLen;
-      const flagsValue = response[idx];
-
-      return {
-        returnCode: returnCode,
-        errorMessage: errorCodeToString(returnCode),
-        appName: appName,
-        appVersion: appVersion,
-        flagLen: flagLen,
-        flagsValue: flagsValue,
-        flagRecovery: (flagsValue & 1) !== 0,
-        flagSignedMcuCode: (flagsValue & 2) !== 0,
-        flagOnboarded: (flagsValue & 4) !== 0,
-        flagPinValidated: (flagsValue & 128) !== 0,
-      };
-    }, IovLedgerApp.processErrorResponse);
   }
 }

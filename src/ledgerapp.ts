@@ -15,10 +15,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-import { Secp256k1Signature } from "@iov/crypto";
 import Transport from "@ledgerhq/hw-transport";
-
-const { fromDer } = Secp256k1Signature;
 
 const CLA = 0x55;
 const CHUNK_SIZE = 250;
@@ -93,6 +90,7 @@ export interface IovLedgerAppVersion extends IovLedgerAppErrorState {
   readonly testMode: boolean;
   readonly version: string;
   readonly deviceLocked: boolean;
+  readonly targetId: string;
 }
 
 export function isIovLedgerAppVersion(data: IovLedgerAppVersion | IovLedgerAppErrorState): data is IovLedgerAppVersion {
@@ -108,25 +106,42 @@ export interface IovLedgerAppAddress extends IovLedgerAppErrorState {
   readonly address: string;
 }
 
+export interface IovLedgerAppInfo extends IovLedgerAppErrorState {
+  readonly appName: string;
+  readonly appVersion: string;
+  readonly flagLen: number;
+  readonly flagsValue: number;
+  readonly flagRecovery: boolean;
+  readonly flagSignedMcuCode: boolean;
+  readonly flagOnboarded: boolean;
+  readonly flagPinValidated: boolean;
+}
+
+export function isIovLedgerAppInfo(data: IovLedgerAppInfo | IovLedgerAppErrorState): data is IovLedgerAppInfo {
+  return (
+    typeof (data as IovLedgerAppInfo).appName === "string" &&
+    typeof (data as IovLedgerAppInfo).appVersion === "string" &&
+    typeof (data as IovLedgerAppInfo).flagLen === "number" &&
+    typeof (data as IovLedgerAppInfo).flagsValue === "number" &&
+    typeof (data as IovLedgerAppInfo).flagRecovery === "boolean" &&
+    typeof (data as IovLedgerAppInfo).flagSignedMcuCode === "boolean" &&
+    typeof (data as IovLedgerAppInfo).flagOnboarded === "boolean" &&
+    typeof (data as IovLedgerAppInfo).flagPinValidated === "boolean"
+  );
+}
+
 export function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppErrorState): data is IovLedgerAppAddress {
   return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }
 
-export interface IovLedgerAppRawSignature extends IovLedgerAppErrorState {
+export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
   readonly signature: Uint8Array;
 }
 
-export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
-  readonly signature: Secp256k1Signature;
-}
-
 export function isIovLedgerAppSignature(
-  data: IovLedgerAppRawSignature | IovLedgerAppSignature | IovLedgerAppErrorState,
-): data is IovLedgerAppRawSignature | IovLedgerAppSignature {
-  const raw = data as IovLedgerAppRawSignature;
-  const sig = data as IovLedgerAppSignature;
-
-  return (raw && raw.signature.length > 0) || (sig && sig.signature instanceof Secp256k1Signature);
+  data: IovLedgerAppSignature | IovLedgerAppErrorState,
+): data is IovLedgerAppSignature {
+  return (data as IovLedgerAppSignature).signature.length > 0;
 }
 
 export class IovLedgerApp {
@@ -217,8 +232,57 @@ export class IovLedgerApp {
     }
 
     this.transport = transport;
-    this.transport.decorateAppAPIMethods(this, ["getVersion", "getAddress", "sign"], APP_KEY);
+    this.transport.decorateAppAPIMethods(this, ["appInfo", "getVersion", "getAddress", "sign"], APP_KEY);
     this.hrp = hrp;
+  }
+
+  public async getAppInfo(): Promise<IovLedgerAppInfo | IovLedgerAppErrorState> {
+    return this.transport.send(0xb0, 0x01, 0, 0).then(response => {
+      const errorCodeData = response.slice(-2);
+      const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
+
+      if (response[0] !== 1) {
+        // Ledger responds with format ID 1. There is no spec for any format != 1
+        return {
+          // short-circuit
+          errorMessage: "response format ID not recognized",
+          returnCode: 0x9001,
+        };
+      }
+
+      const appNameLen = response[1];
+      const appName = response.slice(2, 2 + appNameLen).toString("ascii");
+
+      let idx = 2 + appNameLen;
+      const appVersionLen = response[idx];
+
+      idx += 1;
+      const appVersion = response.slice(idx, idx + appVersionLen).toString("ascii");
+
+      idx += appVersionLen;
+      const appFlagsLen = response[idx];
+
+      idx += 1;
+      const flagLen = appFlagsLen;
+      const flagsValue = response[idx];
+
+      return {
+        returnCode: returnCode,
+        errorMessage: errorCodeToString(returnCode),
+        appName: appName,
+        appVersion: appVersion,
+        flagLen: flagLen,
+        flagsValue: flagsValue,
+        // tslint:disable-next-line: no-bitwise
+        flagRecovery: (flagsValue & 1) !== 0,
+        // tslint:disable-next-line: no-bitwise
+        flagSignedMcuCode: (flagsValue & 2) !== 0,
+        // tslint:disable-next-line: no-bitwise
+        flagOnboarded: (flagsValue & 4) !== 0,
+        // tslint:disable-next-line: no-bitwise
+        flagPinValidated: (flagsValue & 128) !== 0,
+      };
+    }, IovLedgerApp.processErrorResponse);
   }
 
   public async getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState> {
@@ -228,12 +292,19 @@ export class IovLedgerApp {
       const errorCodeData = response.slice(-2);
       const errorCode = errorCodeData[0] * 256 + errorCodeData[1];
 
+      let targetId = 0;
+      if (response.length >= 9) {
+        // tslint:disable-next-line: no-bitwise
+        targetId = (response[5] << 24) + (response[6] << 16) + (response[7] << 8) + (response[8] << 0);
+      }
+
       const success: IovLedgerAppVersion = {
         testMode: response[0] !== 0,
         version: `${response[1]}.${response[2]}.${response[3]}`,
         deviceLocked: response[4] === 1,
         returnCode: errorCode,
         errorMessage: errorCodeToString(errorCode),
+        targetId: targetId.toString(16),
       };
       return success;
     }, IovLedgerApp.processErrorResponse);
@@ -286,7 +357,7 @@ export class IovLedgerApp {
 
       const signed: IovLedgerAppSignature = {
         returnCode: latestResult.returnCode,
-        signature: fromDer(latestResult.signature),
+        signature: latestResult.signature,
         errorMessage: latestResult.errorMessage,
       };
 
@@ -298,7 +369,7 @@ export class IovLedgerApp {
     chunkIdx: number,
     chunkNum: number,
     chunk: Buffer,
-  ): Promise<IovLedgerAppRawSignature | IovLedgerAppErrorState> {
+  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
     let payloadType = PAYLOAD_TYPE.ADD;
     if (chunkIdx === 1) {
       payloadType = PAYLOAD_TYPE.INIT;

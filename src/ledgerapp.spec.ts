@@ -1,5 +1,5 @@
-import { Secp256k1, Secp256k1Signature, Sha256 } from "@iov/crypto";
-import { Encoding } from "@iov/encoding";
+import { Secp256k1, Secp256k1Signature, Sha256 } from "@cosmjs/crypto";
+import { fromHex } from "@cosmjs/encoding";
 import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import * as semver from "semver";
@@ -10,9 +10,13 @@ import {
   pendingWithoutSeededLedger,
   skipTests,
 } from "./common.spec";
-import { IovLedgerApp, isIovLedgerAppAddress, isIovLedgerAppSignature, isIovLedgerAppVersion } from "./ledgerapp";
-
-const { fromHex } = Encoding;
+import {
+  IovLedgerApp,
+  isIovLedgerAppAddress,
+  isIovLedgerAppInfo,
+  isIovLedgerAppSignature,
+  isIovLedgerAppVersion,
+} from "./ledgerapp";
 
 describe("IovLedgerApp", () => {
   // https://github.com/Zondax/ledger-cosmos-js/blob/master/tests/basic.ispec.js#L132
@@ -68,6 +72,7 @@ describe("IovLedgerApp", () => {
       );
       expect(response.version).toMatch(/^[0-9]+\.[0-9]+\.[0-9]+$/);
       expect(semver.satisfies(response.version, "^2.16.1")).toEqual(true);
+      expect(response.targetId).toEqual("31100004");
     });
   });
 
@@ -168,12 +173,11 @@ describe("IovLedgerApp", () => {
       const responseSign = await app.sign(accountIndex, message);
       if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
-      expect(responseSign.signature instanceof Secp256k1Signature).toEqual(true);
-
       // Check signature is valid
       const encoded = Uint8Array.from(message.split(""), s => s.charCodeAt(0));
       const prehash = new Sha256(encoded).digest();
-      const valid = await Secp256k1.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+      const signature = Secp256k1Signature.fromDer(responseSign.signature);
+      const valid = await Secp256k1.verifySignature(signature, prehash, responseAddr.pubkey);
 
       expect(valid).toEqual(true);
     });
@@ -216,15 +220,35 @@ describe("IovLedgerApp", () => {
       const responseSign = await app.sign(accountIndex, tx);
       if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
-      expect(responseSign.signature instanceof Secp256k1Signature).toEqual(true);
-
       // Check signature is valid
       const sorted = JSON.stringify(IovLedgerApp.sortObject(tx));
       const encoded = Uint8Array.from(sorted.split(""), s => s.charCodeAt(0));
       const prehash = new Sha256(encoded).digest();
-      const valid = await Secp256k1.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+      const signature = Secp256k1Signature.fromDer(responseSign.signature);
+      const valid = await Secp256k1.verifySignature(signature, prehash, responseAddr.pubkey);
 
       expect(valid).toEqual(true);
+    });
+  });
+
+  describe("getAppInfo", () => {
+    it("works", async () => {
+      pendingWithoutLedger();
+
+      const app = new IovLedgerApp(transport!);
+      const response = await app.getAppInfo();
+
+      if (!isIovLedgerAppInfo(response)) throw new Error(response.errorMessage);
+
+      expect(response.errorMessage).toEqual("No errors");
+      expect(response.appName).toMatch(/^IOV(TEST)?$/);
+      expect(semver.satisfies(response.appVersion, "^2.16.1")).toEqual(true);
+      expect(response.flagLen).toEqual(1);
+      expect(response.flagsValue).toEqual(2);
+      expect(response.flagRecovery).toEqual(false);
+      expect(response.flagPinValidated).toEqual(false);
+      expect(response.flagOnboarded).toEqual(false);
+      expect(response.flagSignedMcuCode).toEqual(true);
     });
   });
 });

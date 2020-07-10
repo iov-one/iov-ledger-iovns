@@ -15,10 +15,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-import { Secp256k1Signature } from "@iov/crypto";
 import Transport from "@ledgerhq/hw-transport";
-
-const { fromDer } = Secp256k1Signature;
 
 const CLA = 0x55;
 const CHUNK_SIZE = 250;
@@ -112,21 +109,14 @@ export function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppEr
   return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }
 
-export interface IovLedgerAppRawSignature extends IovLedgerAppErrorState {
+export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
   readonly signature: Uint8Array;
 }
 
-export interface IovLedgerAppSignature extends IovLedgerAppErrorState {
-  readonly signature: Secp256k1Signature;
-}
-
 export function isIovLedgerAppSignature(
-  data: IovLedgerAppRawSignature | IovLedgerAppSignature | IovLedgerAppErrorState,
-): data is IovLedgerAppRawSignature | IovLedgerAppSignature {
-  const raw = data as IovLedgerAppRawSignature;
-  const sig = data as IovLedgerAppSignature;
-
-  return (raw && raw.signature.length > 0) || (sig && sig.signature instanceof Secp256k1Signature);
+  data: IovLedgerAppSignature | IovLedgerAppErrorState,
+): data is IovLedgerAppSignature {
+  return (data as IovLedgerAppSignature).signature.length > 0;
 }
 
 export class IovLedgerApp {
@@ -286,7 +276,7 @@ export class IovLedgerApp {
 
       const signed: IovLedgerAppSignature = {
         returnCode: latestResult.returnCode,
-        signature: fromDer(latestResult.signature),
+        signature: latestResult.signature,
         errorMessage: latestResult.errorMessage,
       };
 
@@ -298,7 +288,7 @@ export class IovLedgerApp {
     chunkIdx: number,
     chunkNum: number,
     chunk: Buffer,
-  ): Promise<IovLedgerAppRawSignature | IovLedgerAppErrorState> {
+  ): Promise<IovLedgerAppSignature | IovLedgerAppErrorState> {
     let payloadType = PAYLOAD_TYPE.ADD;
     if (chunkIdx === 1) {
       payloadType = PAYLOAD_TYPE.INIT;

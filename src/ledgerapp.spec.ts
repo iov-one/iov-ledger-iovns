@@ -168,12 +168,11 @@ describe("IovLedgerApp", () => {
       const responseSign = await app.sign(accountIndex, message);
       if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
-      expect(responseSign.signature instanceof Secp256k1Signature).toEqual(true);
-
       // Check signature is valid
       const encoded = Uint8Array.from(message.split(""), s => s.charCodeAt(0));
       const prehash = new Sha256(encoded).digest();
-      const valid = await Secp256k1.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+      const signature = Secp256k1Signature.fromDer(responseSign.signature);
+      const valid = await Secp256k1.verifySignature(signature, prehash, responseAddr.pubkey);
 
       expect(valid).toEqual(true);
     });
@@ -216,13 +215,12 @@ describe("IovLedgerApp", () => {
       const responseSign = await app.sign(accountIndex, tx);
       if (!isIovLedgerAppSignature(responseSign)) throw new Error(responseSign.errorMessage);
 
-      expect(responseSign.signature instanceof Secp256k1Signature).toEqual(true);
-
       // Check signature is valid
       const sorted = JSON.stringify(IovLedgerApp.sortObject(tx));
       const encoded = Uint8Array.from(sorted.split(""), s => s.charCodeAt(0));
       const prehash = new Sha256(encoded).digest();
-      const valid = await Secp256k1.verifySignature(responseSign.signature, prehash, responseAddr.pubkey);
+      const signature = Secp256k1Signature.fromDer(responseSign.signature);
+      const valid = await Secp256k1.verifySignature(signature, prehash, responseAddr.pubkey);
 
       expect(valid).toEqual(true);
     });

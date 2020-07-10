@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0
+- Add iovLedgerApp.GetAppInfo()
+- Add targetId to return value from iovLedgerApp.getVersion()
+
+Breaking Changes:
+- Revert to DER signature in iovLedgerApp.sign()
+
 ## 2.0.1
 - Convert signature from DER in iovLedgerApp.sign()
 - Allow a transaction-like object to be passed to iovLedgerApp.sign()

@@ -44,9 +44,9 @@ export declare class IovLedgerApp {
     private readonly transport;
     private readonly hrp;
     constructor(transport: Transport, hrp?: string);
+    getAppInfo(): Promise<IovLedgerAppInfo | IovLedgerAppErrorState>;
     getVersion(): Promise<IovLedgerAppVersion | IovLedgerAppErrorState>;
     getAddress(addressIndex: number, requireConfirmation?: boolean): Promise<IovLedgerAppAddress | IovLedgerAppErrorState>;
     sign(addressIndex: number, message: string | object): Promise<IovLedgerAppSignature | IovLedgerAppErrorState>;
     private signSendChunk;
-    getAppInfo(): Promise<IovLedgerAppInfo | IovLedgerAppErrorState>;
 }

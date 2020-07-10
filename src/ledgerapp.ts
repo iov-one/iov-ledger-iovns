@@ -90,6 +90,7 @@ export interface IovLedgerAppVersion extends IovLedgerAppErrorState {
   readonly testMode: boolean;
   readonly version: string;
   readonly deviceLocked: boolean;
+  readonly targetId: string;
 }
 
 export function isIovLedgerAppVersion(data: IovLedgerAppVersion | IovLedgerAppErrorState): data is IovLedgerAppVersion {
@@ -218,12 +219,18 @@ export class IovLedgerApp {
       const errorCodeData = response.slice(-2);
       const errorCode = errorCodeData[0] * 256 + errorCodeData[1];
 
+      let targetId = 0;
+      if (response.length >= 9) {
+        targetId = (response[5] << 24) + (response[6] << 16) + (response[7] << 8) + (response[8] << 0);
+      }
+
       const success: IovLedgerAppVersion = {
         testMode: response[0] !== 0,
         version: `${response[1]}.${response[2]}.${response[3]}`,
         deviceLocked: response[4] === 1,
         returnCode: errorCode,
         errorMessage: errorCodeToString(errorCode),
+        targetId: targetId.toString(16),
       };
       return success;
     }, IovLedgerApp.processErrorResponse);

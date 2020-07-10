@@ -68,6 +68,7 @@ describe("IovLedgerApp", () => {
       );
       expect(response.version).toMatch(/^[0-9]+\.[0-9]+\.[0-9]+$/);
       expect(semver.satisfies(response.version, "^2.16.1")).toEqual(true);
+      expect(response.targetId).toEqual("31100004");
     });
   });
 

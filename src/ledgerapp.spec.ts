@@ -1,5 +1,5 @@
-import { Secp256k1, Secp256k1Signature, Sha256 } from "@iov/crypto";
-import { Encoding } from "@iov/encoding";
+import { Secp256k1, Secp256k1Signature, Sha256 } from "@cosmjs/crypto";
+import { fromHex } from "@cosmjs/encoding";
 import Transport from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import * as semver from "semver";
@@ -17,8 +17,6 @@ import {
   isIovLedgerAppSignature,
   isIovLedgerAppVersion,
 } from "./ledgerapp";
-
-const { fromHex } = Encoding;
 
 describe("IovLedgerApp", () => {
   // https://github.com/Zondax/ledger-cosmos-js/blob/master/tests/basic.ispec.js#L132

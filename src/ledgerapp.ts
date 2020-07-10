@@ -130,7 +130,6 @@ export function isIovLedgerAppInfo(data: IovLedgerAppInfo | IovLedgerAppErrorSta
   );
 }
 
-
 export function isIovLedgerAppAddress(data: IovLedgerAppAddress | IovLedgerAppErrorState): data is IovLedgerAppAddress {
   return typeof (data as IovLedgerAppAddress).address !== "undefined";
 }

@@ -1,5 +1,5 @@
+import { Bech32 } from "@cosmjs/encoding";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-import bech32 from "bech32";
 
 import { IovLedgerApp, isIovLedgerAppAddress, isIovLedgerAppVersion } from "./ledgerapp";
 
@@ -12,13 +12,11 @@ const main = async (): Promise<void> => {
   const response = await app.getAddress(0); // HARD-CODED
   if (!isIovLedgerAppAddress(response)) throw new Error(response.errorMessage);
 
-  const words = bech32.toWords(Buffer.from(response.pubkey));
-
   // eslint-disable-next-line no-console
   console.log({
     address: response.address,
     errorMessage: response.errorMessage,
-    pubkey: bech32.encode("starpub", words), // HARD-CODED
+    pubkey: Bech32.encode("starpub", Buffer.from(response.pubkey)), // HARD-CODED
   });
 };
 

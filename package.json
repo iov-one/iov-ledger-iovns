@@ -37,7 +37,8 @@
     "minimist": "^1.2.5"
   },
   "dependencies": {
-    "@ledgerhq/hw-transport": "^5.11.0"
+    "@ledgerhq/hw-transport": "^5.11.0",
+    "bech32": "^1.1.4"
   },
   "devDependencies": {
     "@cosmjs/crypto": "^0.21.1",

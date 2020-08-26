@@ -142,21 +142,16 @@ export function isIovLedgerAppSignature(
   data: IovLedgerAppSignature | IovLedgerAppErrorState,
 ): data is IovLedgerAppSignature {
   // We could first ensure that there was no error and then proceed to see
-  // if passed object actually as a signature
-  if (data.returnCode === ERROR_CODE.NoError) {
-    // If the object has the signature property and it's not
-    // undefined, then we proceed to check it's length
-    if ("signature" in data && typeof data.signature !== "undefined") {
-      const { signature } = data;
-      // Now that we know this will not crash, let's check if the signature
-      // is not an empty string (it would be awesome to actuall validate it)
-      return signature.length > 0;
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
+  // if passed object actually has a signature
+  if (data.returnCode !== ERROR_CODE.NoError) return false;
+  // If the object has the signature property and it's not
+  // undefined, then we proceed to check it's length
+  if (!("signature" in data) || typeof data.signature === "undefined") return false;
+  // Now that we know this will not crash, let's check if the signature
+  // is not an empty string
+  const { signature } = data;
+  // it would be awesome to actually validate it
+  return signature.length > 0;
 }
 
 export class IovLedgerApp {

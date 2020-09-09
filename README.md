@@ -1,6 +1,6 @@
 # @iov/ledger-bns
 
-[![npm version](https://img.shields.io/npm/v/@iov/ledger-bns.svg)](https://www.npmjs.com/package/@iov/ledger-bns)
+[![npm version](https://img.shields.io/npm/v/@iov/ledger-iovns.svg)](https://www.npmjs.com/package/@iov/ledger-iovns)
 
 This package provides an adaptor to use the IOV Ledger app as a wallet.
 

@@ -3,3 +3,5 @@ build/
 dist/
 docs/
 .idea/
+yarn-error.log
+
